@@ -59,11 +59,11 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - **No nested BCs.** Voyages is a sibling of Vessels under Domain / Features / Infrastructure Persistence, not `Vessels/Voyages/`.
 - **Tank** lives in Domain Vessels and has a **SQL FK** to Vessel (same BC).
 - **Voyage** / **Certificate** store **`VesselId` only** — no cross-BC SQL FK. Existence is checked in the command handler via `AppDbContext.Vessels`.
-- **Endpoints** never inject `AppDbContext`; they dispatch commands/queries. **Handlers** inject `AppDbContext` (commands own `SaveChangesAsync`; queries are read-only).
-- No repository layer — handlers use EF Core directly.
+- **Endpoints** never inject `AppDbContext`; they dispatch commands/queries. **Command handlers** use Domain entities + `AppDbContext` for writes (`SaveChangesAsync`). **Query handlers** are read-only.
+- No repository layer. Simple EF may live in the handler; **named read queries** under `Infrastructure/Persistence/{BC}/Queries/` implement `IDbQuery<TInput, TResult>` with `static abstract QueryAsync`. For now `TResult` may be Domain; always call **`AsNoTracking()`** on reads (enforced by ArchitectureTests). The Feature maps to HTTP `*Response` (example: `GetVesselWithTanks` → `Vessel` → `GetVesselResponse`).
 - Endpoints use **Union-Type Returning Handlers**: override `ExecuteAsync` and return `TypedResults` (`Created` / `Ok` / `NotFound`). Do not build `ProblemDetails` in the handler — enable `c.Errors.UseProblemDetails()` in `UseApi()`.
 - Command features (writes): Endpoint + Request + Response + Validator + `Summary<TEndpoint>` + Command + Handler (`ICommand` / `ICommandHandler`).
-- Query features (reads): Endpoint + Response + Summary + Query + Handler (`IQuery` / `IQueryHandler`). Thin GET example: GetVessel.
+- Query features (reads): Endpoint + Response + Summary + Query + Handler (`IQuery` / `IQueryHandler`). GetVessel uses named query `Persistence/Vessels/Queries/GetVesselWithTanks`.
 - Unknown related id on create (e.g. `VesselId`) → handler returns `null`; endpoint maps to `TypedResults.NotFound()`.
 - Feature Request/Response/DTOs/Commands/Queries are **`sealed record`** with primary constructors; Settings POCOs are **`sealed record`** with `init` properties; domain entities stay mutable classes for EF.
 
@@ -73,7 +73,7 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - `Domain.UnitTests` — domain unit tests (scaffold; add when domain behavior exists)
 - `Infrastructure.UnitTests` — providers (`UserProvider`, `HashProvider`)
 - `Api.IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers Postgres; Docker required)
-- `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure (solution-wide; not prefixed with `Api.`). Split by concern: `LayerTests`, `FeatureTests`, `BoundedContextTests` (allowed BCs listed in `TestAssemblies`).
+- `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure (solution-wide; not prefixed with `Api.`). Split by concern: `LayerTests`, `FeatureTests`, `BoundedContextTests`, `PersistenceTests` (allowed BCs listed in `TestAssemblies`).
 
 Do not swap a different database engine into IntegrationTests for convenience.
 

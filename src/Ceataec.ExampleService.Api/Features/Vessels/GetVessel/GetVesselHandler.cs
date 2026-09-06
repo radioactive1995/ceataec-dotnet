@@ -1,6 +1,6 @@
-using Ceataec.ExampleService.Infrastructure.Persistence;
 using Ceataec.ExampleService.Cqrs;
-using Microsoft.EntityFrameworkCore;
+using Ceataec.ExampleService.Infrastructure.Persistence;
+using Ceataec.ExampleService.Infrastructure.Persistence.Vessels.Queries;
 
 namespace Ceataec.ExampleService.Features.Vessels.GetVessel;
 
@@ -11,9 +11,7 @@ public sealed class GetVesselHandler(AppDbContext dbContext)
         GetVesselQuery query,
         CancellationToken ct)
     {
-        var vessel = await dbContext.Vessels
-            .Include(v => v.Tanks)
-            .FirstOrDefaultAsync(v => v.Id == query.Id, ct);
+        var vessel = await GetVesselWithTanks.QueryAsync(dbContext, query.Id, ct);
 
         if (vessel is null)
         {
