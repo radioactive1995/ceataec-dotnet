@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Ceataec.ExampleService\Ceataec.ExampleService.csproj" />
+    <ProjectReference Include="..\..\src\Ceataec.ExampleService.Api\Ceataec.ExampleService.Api.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Infrastructure.Persistence;
 using FastEndpoints;
 using NetArchTest.Rules;
@@ -7,12 +8,14 @@ namespace Ceataec.ExampleService.ArchitectureTests;
 public sealed class BoundaryTests
 {
     private static readonly System.Reflection.Assembly ApiAssembly = typeof(Program).Assembly;
+    private static readonly System.Reflection.Assembly DomainAssembly = typeof(Vessel).Assembly;
+    private static readonly System.Reflection.Assembly InfrastructureAssembly = typeof(AppDbContext).Assembly;
 
     [Fact]
     public void Bounded_contexts_are_not_nested()
     {
         Assert.Empty(
-            Types.InAssembly(ApiAssembly)
+            Types.InAssemblies([ApiAssembly, DomainAssembly])
                 .That()
                 .ResideInNamespaceStartingWith("Ceataec.ExampleService.Domain.Vessels.Voyages")
                 .Or()
@@ -43,7 +46,7 @@ public sealed class BoundaryTests
     [Fact]
     public void Voyages_Persistence_does_not_reference_Vessels_Domain()
     {
-        var result = Types.InAssembly(ApiAssembly)
+        var result = Types.InAssembly(InfrastructureAssembly)
             .That()
             .ResideInNamespace("Ceataec.ExampleService.Infrastructure.Persistence.Voyages")
             .ShouldNot()
@@ -56,7 +59,7 @@ public sealed class BoundaryTests
     [Fact]
     public void Certificates_Persistence_does_not_reference_Vessels_Domain()
     {
-        var result = Types.InAssembly(ApiAssembly)
+        var result = Types.InAssembly(InfrastructureAssembly)
             .That()
             .ResideInNamespace("Ceataec.ExampleService.Infrastructure.Persistence.Certificates")
             .ShouldNot()
@@ -77,7 +80,7 @@ public sealed class BoundaryTests
             .ToList();
 
         var failing = endpointTypes
-            .Where(t => DependsOnAppDbContext(t))
+            .Where(DependsOnAppDbContext)
             .Select(t => t.FullName)
             .ToList();
 
@@ -87,13 +90,13 @@ public sealed class BoundaryTests
     }
 
     [Fact]
-    public void Api_does_not_contain_endpoints()
+    public void Api_pipeline_does_not_contain_endpoints()
     {
         var endpointTypes = Types.InAssembly(ApiAssembly)
             .That()
             .ResideInNamespaceStartingWith("Ceataec.ExampleService.Api")
             .GetTypes()
-            .Where(t => IsEndpoint(t))
+            .Where(IsEndpoint)
             .ToList();
 
         Assert.Empty(endpointTypes);
@@ -103,7 +106,7 @@ public sealed class BoundaryTests
     public void No_Host_or_Common_namespaces()
     {
         Assert.Empty(
-            Types.InAssembly(ApiAssembly)
+            Types.InAssemblies([ApiAssembly, DomainAssembly, InfrastructureAssembly])
                 .That()
                 .ResideInNamespaceStartingWith("Ceataec.ExampleService.Host")
                 .Or()
@@ -112,25 +115,45 @@ public sealed class BoundaryTests
     }
 
     [Fact]
-    public void Domain_does_not_reference_Persistence_or_FastEndpoints()
+    public void Domain_does_not_reference_Infrastructure_or_FastEndpoints()
     {
-        var result = Types.InAssembly(ApiAssembly)
-            .That()
-            .ResideInNamespaceStartingWith("Ceataec.ExampleService.Domain")
+        var infra = Types.InAssembly(DomainAssembly)
+            .ShouldNot()
+            .HaveDependencyOn("Ceataec.ExampleService.Infrastructure")
+            .GetResult();
+        Assert.True(infra.IsSuccessful, Format(infra));
+
+        var fastEndpoints = Types.InAssembly(DomainAssembly)
             .ShouldNot()
             .HaveDependencyOn("FastEndpoints")
             .GetResult();
-
-        Assert.True(result.IsSuccessful, Format(result));
+        Assert.True(fastEndpoints.IsSuccessful, Format(fastEndpoints));
 
         Assert.DoesNotContain(
-            Types.InAssembly(ApiAssembly)
-                .That()
-                .ResideInNamespaceStartingWith("Ceataec.ExampleService.Domain")
-                .GetTypes(),
+            Types.InAssembly(DomainAssembly).GetTypes(),
             t => t.GetConstructors().Any(c =>
                 c.GetParameters().Any(p =>
-                    p.ParameterType.Namespace?.Contains(".Persistence") == true)));
+                    p.ParameterType.Namespace?.Contains(".Persistence") == true
+                    || p.ParameterType.Namespace?.StartsWith("Ceataec.ExampleService.Infrastructure", StringComparison.Ordinal) == true
+                    || p.ParameterType.Namespace?.StartsWith("Ceataec.ExampleService.Api", StringComparison.Ordinal) == true)));
+    }
+
+    [Fact]
+    public void Infrastructure_does_not_reference_Api_Features_or_FastEndpoints()
+    {
+        var fastEndpoints = Types.InAssembly(InfrastructureAssembly)
+            .ShouldNot()
+            .HaveDependencyOn("FastEndpoints")
+            .GetResult();
+        Assert.True(fastEndpoints.IsSuccessful, Format(fastEndpoints));
+
+        Assert.DoesNotContain(
+            Types.InAssembly(InfrastructureAssembly).GetTypes(),
+            t => t.GetConstructors().Any(c =>
+                c.GetParameters().Any(p =>
+                    p.ParameterType.Namespace?.StartsWith("Ceataec.ExampleService.Features", StringComparison.Ordinal) == true
+                    || p.ParameterType.Namespace?.StartsWith("Ceataec.ExampleService.Api", StringComparison.Ordinal) == true
+                    || p.ParameterType.Assembly == ApiAssembly)));
     }
 
     private static bool IsEndpoint(Type type)

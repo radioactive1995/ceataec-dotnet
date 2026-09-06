@@ -2,6 +2,8 @@ using Ceataec.ExampleService.Infrastructure.Persistence;
 using Ceataec.ExampleService.Infrastructure.Providers;
 using Ceataec.ExampleService.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Ceataec.ExampleService.Infrastructure;
 

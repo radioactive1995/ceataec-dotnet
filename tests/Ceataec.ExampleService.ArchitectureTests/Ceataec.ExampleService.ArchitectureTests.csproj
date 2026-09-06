@@ -20,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Ceataec.ExampleService\Ceataec.ExampleService.csproj" />
+    <ProjectReference Include="..\..\src\Ceataec.ExampleService.Api\Ceataec.ExampleService.Api.csproj" />
+    <ProjectReference Include="..\..\src\Ceataec.ExampleService.Domain\Ceataec.ExampleService.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Ceataec.ExampleService.Infrastructure\Ceataec.ExampleService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
