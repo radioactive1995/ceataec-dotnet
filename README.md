@@ -69,9 +69,11 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 
 ## Tests
 
-- `UnitTests` — validators, `UserProvider`, `HashProvider`
-- `IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers Postgres; Docker required)
-- `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure assemblies
+- `Api.UnitTests` — feature validators (and other Api-only unit tests)
+- `Domain.UnitTests` — domain unit tests (scaffold; add when domain behavior exists)
+- `Infrastructure.UnitTests` — providers (`UserProvider`, `HashProvider`)
+- `Api.IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers Postgres; Docker required)
+- `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure (solution-wide; not prefixed with `Api.`). Split by concern: `LayerTests`, `FeatureTests`, `BoundedContextTests` (allowed BCs listed in `TestAssemblies`).
 
 Do not swap a different database engine into IntegrationTests for convenience.
 

@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Ceataec.ExampleService.Infrastructure.Providers;
 using Microsoft.AspNetCore.Http;
 
-namespace Ceataec.ExampleService.UnitTests.Infrastructure.Providers;
+namespace Ceataec.ExampleService.Infrastructure.UnitTests.Providers;
 
 public sealed class UserProviderTests
 {

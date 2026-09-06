@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using Ceataec.ExampleService.Features.Vessels.CreateVessel;
 using Ceataec.ExampleService.Features.Vessels.GetVessel;
 
-namespace Ceataec.ExampleService.IntegrationTests.Features.Vessels;
+namespace Ceataec.ExampleService.Api.IntegrationTests.Features.Vessels;
 
 [Collection(IntegrationTestCollection.Name)]
 public sealed class CreateVesselTests(ExampleWebApplicationFactory factory)

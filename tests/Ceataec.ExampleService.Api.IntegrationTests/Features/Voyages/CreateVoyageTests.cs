@@ -1,12 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
-using Ceataec.ExampleService.Features.Certificates.CreateCertificate;
 using Ceataec.ExampleService.Features.Vessels.CreateVessel;
+using Ceataec.ExampleService.Features.Voyages.CreateVoyage;
 
-namespace Ceataec.ExampleService.IntegrationTests.Features.Certificates;
+namespace Ceataec.ExampleService.Api.IntegrationTests.Features.Voyages;
 
 [Collection(IntegrationTestCollection.Name)]
-public sealed class CreateCertificateTests(ExampleWebApplicationFactory factory)
+public sealed class CreateVoyageTests(ExampleWebApplicationFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -14,23 +14,23 @@ public sealed class CreateCertificateTests(ExampleWebApplicationFactory factory)
     public async Task Rejects_unknown_vessel_id()
     {
         var response = await _client.PostAsJsonAsync(
-            "/certificates",
-            new CreateCertificateRequest(Guid.NewGuid(), "Safety Management", DateTimeOffset.UtcNow));
+            "/voyages",
+            new CreateVoyageRequest(Guid.NewGuid(), "Rotterdam", DateTimeOffset.UtcNow.AddDays(1)));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Creates_certificate_for_existing_vessel()
+    public async Task Creates_voyage_for_existing_vessel()
     {
         var vesselId = await CreateVesselAsync();
 
         var response = await _client.PostAsJsonAsync(
-            "/certificates",
-            new CreateCertificateRequest(vesselId, "Safety Management", DateTimeOffset.UtcNow));
+            "/voyages",
+            new CreateVoyageRequest(vesselId, "Rotterdam", DateTimeOffset.UtcNow.AddDays(1)));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<CreateCertificateResponse>();
+        var body = await response.Content.ReadFromJsonAsync<CreateVoyageResponse>();
         Assert.NotNull(body);
         Assert.Equal(vesselId, body.VesselId);
     }
@@ -39,7 +39,7 @@ public sealed class CreateCertificateTests(ExampleWebApplicationFactory factory)
     {
         var create = await _client.PostAsJsonAsync(
             "/vessels",
-            new CreateVesselRequest("Cert Carrier", $"IMO{Random.Shared.Next(3000000, 3999999)}"));
+            new CreateVesselRequest("Voyage Carrier", $"IMO{Random.Shared.Next(2000000, 2999999)}"));
         create.EnsureSuccessStatusCode();
         var body = await create.Content.ReadFromJsonAsync<CreateVesselResponse>();
         return body!.Id;

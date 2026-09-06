@@ -1,4 +1,4 @@
-namespace Ceataec.ExampleService.IntegrationTests;
+namespace Ceataec.ExampleService.Api.IntegrationTests;
 
 [CollectionDefinition(Name)]
 public sealed class IntegrationTestCollection : ICollectionFixture<ExampleWebApplicationFactory>

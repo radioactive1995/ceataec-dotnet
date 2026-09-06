@@ -1,6 +1,6 @@
 using Ceataec.ExampleService.Infrastructure.Providers;
 
-namespace Ceataec.ExampleService.UnitTests.Infrastructure.Providers;
+namespace Ceataec.ExampleService.Infrastructure.UnitTests.Providers;
 
 public sealed class HashProviderTests
 {

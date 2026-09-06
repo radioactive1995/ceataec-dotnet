@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 
-namespace Ceataec.ExampleService.IntegrationTests;
+namespace Ceataec.ExampleService.Api.IntegrationTests;
 
 public sealed class ExampleWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {

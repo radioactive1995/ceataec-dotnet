@@ -1,7 +1,7 @@
 using Ceataec.ExampleService.Features.Vessels.CreateVessel;
 using FluentValidation.TestHelper;
 
-namespace Ceataec.ExampleService.UnitTests.Features.Vessels.CreateVessel;
+namespace Ceataec.ExampleService.Api.UnitTests.Features.Vessels.CreateVessel;
 
 public sealed class CreateVesselValidatorTests
 {
