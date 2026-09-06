@@ -1,7 +1,4 @@
 using Ceataec.ExampleService.Infrastructure.Persistence;
-using Ceataec.ExampleService.Infrastructure.Persistence.Certificates;
-using Ceataec.ExampleService.Infrastructure.Persistence.Vessels;
-using Ceataec.ExampleService.Infrastructure.Persistence.Voyages;
 using Ceataec.ExampleService.Infrastructure.Providers;
 using Ceataec.ExampleService.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -30,10 +27,6 @@ public static class DependencyInjection
 
         services.AddScoped<IUserProvider, UserProvider>();
         services.AddSingleton<IHashProvider, HashProvider>();
-
-        services.AddScoped<IVesselRepository, VesselRepository>();
-        services.AddScoped<IVoyageRepository, VoyageRepository>();
-        services.AddScoped<ICertificateRepository, CertificateRepository>();
 
         return services;
     }

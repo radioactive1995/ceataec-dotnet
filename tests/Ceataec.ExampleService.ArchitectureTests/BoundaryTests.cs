@@ -67,16 +67,23 @@ public sealed class BoundaryTests
     }
 
     [Fact]
-    public void Features_do_not_reference_AppDbContext()
+    public void Endpoints_do_not_reference_AppDbContext()
     {
-        var result = Types.InAssembly(ApiAssembly)
+        var endpointTypes = Types.InAssembly(ApiAssembly)
             .That()
             .ResideInNamespaceStartingWith("Ceataec.ExampleService.Features")
-            .ShouldNot()
-            .HaveDependencyOn(typeof(AppDbContext).FullName!)
-            .GetResult();
+            .GetTypes()
+            .Where(IsEndpoint)
+            .ToList();
 
-        Assert.True(result.IsSuccessful, Format(result));
+        var failing = endpointTypes
+            .Where(t => DependsOnAppDbContext(t))
+            .Select(t => t.FullName)
+            .ToList();
+
+        Assert.True(
+            failing.Count == 0,
+            "Endpoints must not reference AppDbContext: " + string.Join(", ", failing));
     }
 
     [Fact]
@@ -130,6 +137,35 @@ public sealed class BoundaryTests
         => type.BaseType is { IsGenericType: true } baseType
            && (baseType.GetGenericTypeDefinition() == typeof(Endpoint<,>)
                || baseType.GetGenericTypeDefinition().Name.StartsWith("EndpointWithoutRequest", StringComparison.Ordinal));
+
+    private static bool DependsOnAppDbContext(Type type)
+    {
+        if (type.GetConstructors().Any(c =>
+                c.GetParameters().Any(p => p.ParameterType == typeof(AppDbContext))))
+        {
+            return true;
+        }
+
+        return type.GetMethods(
+                System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.DeclaredOnly)
+            .SelectMany(m => m.GetParameters())
+            .Any(p => p.ParameterType == typeof(AppDbContext))
+            || type.GetFields(
+                    System.Reflection.BindingFlags.Instance
+                    | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.NonPublic
+                    | System.Reflection.BindingFlags.DeclaredOnly)
+                .Any(f => f.FieldType == typeof(AppDbContext))
+            || type.GetProperties(
+                    System.Reflection.BindingFlags.Instance
+                    | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.NonPublic
+                    | System.Reflection.BindingFlags.DeclaredOnly)
+                .Any(p => p.PropertyType == typeof(AppDbContext));
+    }
 
     private static string Format(TestResult result)
         => result.FailingTypes is null

@@ -1,0 +1,43 @@
+using Ceataec.ExampleService.Domain.Voyages;
+using Ceataec.ExampleService.Infrastructure.Persistence;
+using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
+
+namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage;
+
+public sealed class CreateVoyageHandler(
+    AppDbContext dbContext,
+    ILogger<CreateVoyageHandler> logger)
+    : ICommandHandler<CreateVoyageCommand, CreateVoyageResponse?>
+{
+    public async Task<CreateVoyageResponse?> ExecuteAsync(
+        CreateVoyageCommand command,
+        CancellationToken ct)
+    {
+        var vesselExists = await dbContext.Vessels
+            .AnyAsync(v => v.Id == command.VesselId, ct);
+
+        if (!vesselExists)
+        {
+            logger.LogWarning("Rejected voyage for unknown vessel {VesselId}", command.VesselId);
+            return null;
+        }
+
+        var voyage = new Voyage
+        {
+            Id = Guid.NewGuid(),
+            VesselId = command.VesselId,
+            Destination = command.Destination.Trim(),
+            DepartureAt = command.DepartureAt
+        };
+
+        dbContext.Voyages.Add(voyage);
+        await dbContext.SaveChangesAsync(ct);
+
+        return new CreateVoyageResponse(
+            voyage.Id,
+            voyage.VesselId,
+            voyage.Destination,
+            voyage.DepartureAt);
+    }
+}

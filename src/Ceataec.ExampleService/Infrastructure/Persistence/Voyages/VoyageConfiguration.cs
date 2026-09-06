@@ -13,6 +13,6 @@ public sealed class VoyageConfiguration : IEntityTypeConfiguration<Voyage>
         builder.Property(x => x.VesselId).IsRequired();
         builder.Property(x => x.Destination).HasMaxLength(200).IsRequired();
         builder.HasIndex(x => x.VesselId);
-        // Cross-module: VesselId only — no HasOne<Vessel>() / SQL FK.
+        // Cross-Aggregate: VesselId only — no HasOne<Vessel>() / SQL FK.
     }
 }

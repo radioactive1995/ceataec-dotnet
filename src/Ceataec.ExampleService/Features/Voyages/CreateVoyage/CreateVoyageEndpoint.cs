@@ -1,15 +1,9 @@
-using Ceataec.ExampleService.Infrastructure.Persistence.Vessels;
-using Ceataec.ExampleService.Domain.Voyages;
-using Ceataec.ExampleService.Infrastructure.Persistence.Voyages;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage;
 
-public sealed class CreateVoyageEndpoint(
-    IVoyageRepository voyages,
-    IVesselRepository vessels,
-    ILogger<CreateVoyageEndpoint> logger)
+public sealed class CreateVoyageEndpoint
     : Endpoint<CreateVoyageRequest, Results<Created<CreateVoyageResponse>, NotFound>>
 {
     public override void Configure()
@@ -22,28 +16,17 @@ public sealed class CreateVoyageEndpoint(
         CreateVoyageRequest req,
         CancellationToken ct)
     {
-        if (!await vessels.ExistsAsync(req.VesselId, ct))
+        var response = await new CreateVoyageCommand(
+                req.VesselId,
+                req.Destination,
+                req.DepartureAt)
+            .ExecuteAsync(ct);
+
+        if (response is null)
         {
-            logger.LogWarning("Rejected voyage for unknown vessel {VesselId}", req.VesselId);
             return TypedResults.NotFound();
         }
 
-        var voyage = new Voyage
-        {
-            Id = Guid.NewGuid(),
-            VesselId = req.VesselId,
-            Destination = req.Destination.Trim(),
-            DepartureAt = req.DepartureAt
-        };
-
-        await voyages.AddAsync(voyage, ct);
-
-        var response = new CreateVoyageResponse(
-            voyage.Id,
-            voyage.VesselId,
-            voyage.Destination,
-            voyage.DepartureAt);
-
-        return TypedResults.Created($"/voyages/{voyage.Id}", response);
+        return TypedResults.Created($"/voyages/{response.Id}", response);
     }
 }
