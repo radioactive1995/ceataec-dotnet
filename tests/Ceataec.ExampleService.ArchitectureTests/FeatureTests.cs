@@ -4,6 +4,44 @@ namespace Ceataec.ExampleService.ArchitectureTests;
 
 public sealed class FeatureTests
 {
+    private static readonly string FeaturesRoot = FindFeaturesRoot();
+
+    [Fact]
+    public void Endpoints_declare_an_explicit_version()
+    {
+        var endpointTypes = Types.InAssembly(TestAssemblies.Api)
+            .That()
+            .ResideInNamespaceStartingWith("Ceataec.ExampleService.Features")
+            .GetTypes()
+            .Where(TestAssemblies.IsEndpoint)
+            .ToList();
+
+        Assert.NotEmpty(endpointTypes);
+
+        var failing = new List<string>();
+
+        foreach (var type in endpointTypes)
+        {
+            var sourcePath = FindEndpointSourceFile(type);
+
+            if (sourcePath is null)
+            {
+                failing.Add($"{type.FullName} (source file not found under Features)");
+                continue;
+            }
+
+            var source = File.ReadAllText(sourcePath);
+            if (!source.Contains("Version(", StringComparison.Ordinal))
+            {
+                failing.Add($"{type.FullName} ({sourcePath})");
+            }
+        }
+
+        Assert.True(
+            failing.Count == 0,
+            "Endpoints must call Version(n) in Configure: " + string.Join(", ", failing));
+    }
+
     [Fact]
     public void Features_do_not_contain_Persistence_or_Domain_folders()
     {
@@ -149,5 +187,41 @@ public sealed class FeatureTests
 
         var names = types.Select(t => t.Name).OrderBy(n => n).ToArray();
         Assert.Equal(["IQuery`1", "IQueryHandler`2"], names);
+    }
+
+    private static string? FindEndpointSourceFile(Type type)
+    {
+        const string featuresNamespace = "Ceataec.ExampleService.Features.";
+        if (type.Namespace is null || !type.Namespace.StartsWith(featuresNamespace, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var relative = type.Namespace[featuresNamespace.Length..].Replace('.', Path.DirectorySeparatorChar);
+        var candidate = Path.Combine(FeaturesRoot, relative, $"{type.Name}.cs");
+        return File.Exists(candidate) ? candidate : null;
+    }
+
+    private static string FindFeaturesRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(
+                dir.FullName,
+                "src",
+                "Ceataec.ExampleService.Api",
+                "Features");
+
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException(
+            "Could not locate src/Ceataec.ExampleService.Api/Features from test BaseDirectory.");
     }
 }
