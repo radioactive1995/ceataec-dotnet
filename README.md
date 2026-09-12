@@ -46,7 +46,7 @@ app.Run();
 |---|---|
 | `Ceataec.ExampleService.Api` | HTTP host: `Program`, pipeline (`DependencyInjection`, `WebApplicationExtensions`, `Middleware/`, `Processors/`, `ExceptionHandling/`), `Features/`, `Cqrs/` |
 | `Ceataec.ExampleService.Domain` | Domain by BC (`Vessels`, `Voyages`, `Certificates`): aggregates/entities/VOs — ErrorOr for results; no project refs to Infra/Api |
-| `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs), `AddInfrastructure` — references Domain |
+| `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs, `Migrations/`), `AddInfrastructure` — references Domain |
 
 **References:** Infrastructure → Domain; Api → Domain + Infrastructure.
 
@@ -61,6 +61,7 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - **Voyage** / **Certificate** store **`VesselId` only** — no cross-BC SQL FK. Existence is checked in the command handler via `ICommandDbContext.Set<Vessel>()`.
 - **Endpoints** never inject persistence contexts; they dispatch commands/queries. **Command handlers** inject `ICommandDbContext`, whose generic `Set<TAggregateRoot>()` constraint exposes only aggregate roots for direct reads and writes.
 - No repository layer. **Named read queries** under `Infrastructure/Persistence/{BC}/Queries/` implement `IDbQuery<TInput, TResult>` with `static abstract QueryAsync`. They receive the concrete `AppDbContext`, may query any mapped type or projection, and may return any `TResult`; always call **`AsNoTracking()`** (enforced by ArchitectureTests). The Feature maps the result to an HTTP `*Response` (example: `GetVesselWithTanks` → `Vessel` → `GetVesselResponse`).
+- **EF migrations** live in `Infrastructure/Persistence/Migrations/` (one history for `AppDbContext`). Add them with `dotnet ef migrations add <Name> --project src/Ceataec.ExampleService.Infrastructure --startup-project src/Ceataec.ExampleService.Api --output-dir Persistence/Migrations`. Integration tests apply them with `Migrate()`.
 - **DDD:** Shared `Entity` / `AggregateRoot` (Id equality). Per BC: aggregate root at folder root (`Vessels/Vessel.cs`); child types under `Entities/` and `ValueObjects/` with matching namespaces (`...Vessels.Entities`, `...Vessels.ValueObjects`). Example: `Vessel` owns `Tank` creation through `AddTank` and uses the `ImoNumber` value object. Domain factories and handlers return `ErrorOr<T>`. Endpoints map failures to **ProblemDetails**: the first error’s type selects the status (400 / 404 / 409 / …) and every error is listed under `errors` as `{ code, description }`. FluentValidation request 400s use the same document (property name as `code`).
 - Domain factories own invariants and normalization; request validators repeat basic checks only for fast client feedback. Add richer behavior when a use case needs it rather than introducing DDD abstractions preemptively.
 - Endpoints use **Union-Type Returning Handlers**: override `ExecuteAsync` and return `TypedResults` (`Created` / `Ok` / `Problem`). Do not build `ProblemDetails` in the handler — enable `c.Errors.UseProblemDetails()` in `UseApi()`.

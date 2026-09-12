@@ -2,6 +2,7 @@ using Ceataec.ExampleService.Infrastructure.Persistence;
 using Ceataec.ExampleService.Infrastructure.Providers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -52,7 +53,7 @@ public sealed class ExampleWebApplicationFactory : WebApplicationFactory<Program
         var host = base.CreateHost(builder);
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.EnsureCreated();
+        db.Database.Migrate();
         return host;
     }
 
