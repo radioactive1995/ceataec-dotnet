@@ -1,4 +1,5 @@
 using Ceataec.ExampleService.Domain.Vessels;
+using Ceataec.ExampleService.Domain.Vessels.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,9 +11,14 @@ public sealed class VesselConfiguration : IEntityTypeConfiguration<Vessel>
     {
         builder.ToTable("vessels");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
-        builder.Property(x => x.ImoNumber).HasMaxLength(20).IsRequired();
-        builder.Property(x => x.CreatedBy).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(Vessel.NameMaxLength).IsRequired();
+        builder.Property(x => x.ImoNumber)
+            .HasConversion(
+                imo => imo.Value,
+                value => ImoNumber.FromPersistence(value))
+            .HasMaxLength(ImoNumber.MaxLength)
+            .IsRequired();
+        builder.Property(x => x.CreatedBy).HasMaxLength(Vessel.CreatedByMaxLength).IsRequired();
         builder.HasIndex(x => x.ImoNumber).IsUnique();
         builder.HasMany(x => x.Tanks)
             .WithOne(x => x.Vessel)

@@ -11,7 +11,7 @@ public sealed class VoyageConfiguration : IEntityTypeConfiguration<Voyage>
         builder.ToTable("voyages");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.VesselId).IsRequired();
-        builder.Property(x => x.Destination).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Destination).HasMaxLength(Voyage.DestinationMaxLength).IsRequired();
         builder.HasIndex(x => x.VesselId);
         // Cross-Aggregate: VesselId only — no HasOne<Vessel>() / SQL FK.
     }

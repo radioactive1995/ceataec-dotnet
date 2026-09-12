@@ -23,13 +23,10 @@ public sealed class CreateCertificateHandler(
             return null;
         }
 
-        var certificate = new Certificate
-        {
-            Id = Guid.NewGuid(),
-            VesselId = command.VesselId,
-            Type = command.Type.Trim(),
-            IssuedOn = command.IssuedOn
-        };
+        var certificate = Certificate.Create(
+            command.VesselId,
+            command.Type,
+            command.IssuedOn);
 
         dbContext.Certificates.Add(certificate);
         await dbContext.SaveChangesAsync(ct);

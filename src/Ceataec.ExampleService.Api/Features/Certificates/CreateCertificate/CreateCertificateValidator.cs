@@ -1,3 +1,4 @@
+using Ceataec.ExampleService.Domain.Certificates;
 using FastEndpoints;
 using FluentValidation;
 
@@ -8,7 +9,7 @@ public sealed class CreateCertificateValidator : Validator<CreateCertificateRequ
     public CreateCertificateValidator()
     {
         RuleFor(x => x.VesselId).NotEmpty();
-        RuleFor(x => x.Type).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Type).NotEmpty().MaximumLength(Certificate.TypeMaxLength);
         RuleFor(x => x.IssuedOn).NotEmpty();
     }
 }

@@ -1,4 +1,5 @@
 using Ceataec.ExampleService.Domain.Vessels;
+using Ceataec.ExampleService.Domain.Vessels.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,7 +11,7 @@ public sealed class TankConfiguration : IEntityTypeConfiguration<Tank>
     {
         builder.ToTable("tanks");
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(Tank.NameMaxLength).IsRequired();
         builder.Property(x => x.CapacityCubicMeters).HasPrecision(18, 2);
         builder.HasOne(x => x.Vessel)
             .WithMany(x => x.Tanks)

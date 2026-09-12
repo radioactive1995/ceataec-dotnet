@@ -21,7 +21,7 @@ public sealed class GetVesselHandler(AppDbContext dbContext)
         return new GetVesselResponse(
             vessel.Id,
             vessel.Name,
-            vessel.ImoNumber,
+            vessel.ImoNumber.Value,
             vessel.CreatedBy,
             vessel.Tanks
                 .Select(t => new TankDto(t.Id, t.Name, t.CapacityCubicMeters))

@@ -1,4 +1,5 @@
 using Ceataec.ExampleService.Domain.Vessels;
+using Ceataec.ExampleService.Domain.Vessels.ValueObjects;
 using Ceataec.ExampleService.Infrastructure.Persistence;
 using Ceataec.ExampleService.Infrastructure.Providers;
 using FastEndpoints;
@@ -16,15 +17,10 @@ public sealed class CreateVesselHandler(
         CancellationToken ct)
     {
         var createdBy = userProvider.GetCurrentUserId();
-
-        var vessel = new Vessel
-        {
-            Id = Guid.NewGuid(),
-            Name = command.Name.Trim(),
-            ImoNumber = command.ImoNumber.Trim(),
-            CreatedBy = createdBy,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
+        var vessel = Vessel.Create(
+            command.Name,
+            ImoNumber.Create(command.ImoNumber),
+            createdBy);
 
         dbContext.Vessels.Add(vessel);
         await dbContext.SaveChangesAsync(ct);
@@ -32,13 +28,13 @@ public sealed class CreateVesselHandler(
         logger.LogInformation(
             "Created vessel {VesselId} ({ImoNumber}) by {CreatedBy}",
             vessel.Id,
-            vessel.ImoNumber,
+            vessel.ImoNumber.Value,
             createdBy);
 
         return new CreateVesselResponse(
             vessel.Id,
             vessel.Name,
-            vessel.ImoNumber,
+            vessel.ImoNumber.Value,
             vessel.CreatedBy);
     }
 }

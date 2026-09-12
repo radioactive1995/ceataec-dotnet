@@ -45,7 +45,7 @@ app.Run();
 | Project | Owns |
 |---|---|
 | `Ceataec.ExampleService.Api` | HTTP host: `Program`, pipeline (`DependencyInjection`, `WebApplicationExtensions`, `Middleware/`, `Processors/`, `ExceptionHandling/`), `Features/`, `Cqrs/` |
-| `Ceataec.ExampleService.Domain` | Entities by BC (`Vessels`, `Voyages`, `Certificates`) — no package or project refs to Infra/Api |
+| `Ceataec.ExampleService.Domain` | Domain by BC (`Vessels`, `Voyages`, `Certificates`): aggregates/entities/VOs — no package or project refs to Infra/Api |
 | `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs), `AddInfrastructure` — references Domain |
 
 **References:** Infrastructure → Domain; Api → Domain + Infrastructure.
@@ -59,18 +59,21 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - **No nested BCs.** Voyages is a sibling of Vessels under Domain / Features / Infrastructure Persistence, not `Vessels/Voyages/`.
 - **Tank** lives in Domain Vessels and has a **SQL FK** to Vessel (same BC).
 - **Voyage** / **Certificate** store **`VesselId` only** — no cross-BC SQL FK. Existence is checked in the command handler via `AppDbContext.Vessels`.
-- **Endpoints** never inject `AppDbContext`; they dispatch commands/queries. **Command handlers** use Domain entities + `AppDbContext` for writes (`SaveChangesAsync`). **Query handlers** are read-only.
+- **Endpoints** never inject `AppDbContext`; they dispatch commands/queries. **Command handlers** orchestrate: call Domain factories (`Vessel.Create`) + `AppDbContext` for writes (`SaveChangesAsync`). **Query handlers** are read-only.
 - No repository layer. Simple EF may live in the handler; **named read queries** under `Infrastructure/Persistence/{BC}/Queries/` implement `IDbQuery<TInput, TResult>` with `static abstract QueryAsync`. For now `TResult` may be Domain; always call **`AsNoTracking()`** on reads (enforced by ArchitectureTests). The Feature maps to HTTP `*Response` (example: `GetVesselWithTanks` → `Vessel` → `GetVesselResponse`).
+- **DDD:** Shared `Entity` / `AggregateRoot` (Id equality). Per BC: aggregate root at folder root (`Vessels/Vessel.cs`); child types under `Entities/` and `ValueObjects/` with matching namespaces (`...Vessels.Entities`, `...Vessels.ValueObjects`). Example: `Vessel` owns `Tank` creation through `AddTank` and uses the `ImoNumber` value object. Invariant failures throw `DomainException` → **400**.
+- Domain factories own invariants and normalization; request validators repeat basic checks only for fast client feedback. Add richer behavior when a use case needs it rather than introducing DDD abstractions preemptively.
 - Endpoints use **Union-Type Returning Handlers**: override `ExecuteAsync` and return `TypedResults` (`Created` / `Ok` / `NotFound`). Do not build `ProblemDetails` in the handler — enable `c.Errors.UseProblemDetails()` in `UseApi()`.
 - Command features (writes): Endpoint + Request + Response + Validator + `Summary<TEndpoint>` + Command + Handler (`ICommand` / `ICommandHandler`).
 - Query features (reads): Endpoint + Response + Summary + Query + Handler (`IQuery` / `IQueryHandler`). GetVessel uses named query `Persistence/Vessels/Queries/GetVesselWithTanks`.
 - Unknown related id on create (e.g. `VesselId`) → handler returns `null`; endpoint maps to `TypedResults.NotFound()`.
-- Feature Request/Response/DTOs/Commands/Queries are **`sealed record`** with primary constructors; Settings POCOs are **`sealed record`** with `init` properties; domain entities stay mutable classes for EF.
+- Feature Request/Response/DTOs/Commands/Queries are **`sealed record`** with primary constructors; Settings POCOs are **`sealed record`** with `init` properties.
+- Aggregates use private setters + factories (EF-friendly), while child entity construction stays behind its aggregate root.
 
 ## Tests
 
 - `Api.UnitTests` — feature validators (and other Api-only unit tests)
-- `Domain.UnitTests` — domain unit tests (scaffold; add when domain behavior exists)
+- `Domain.UnitTests` — domain unit tests (`Vessel.Create`, `ImoNumber`, …)
 - `Infrastructure.UnitTests` — providers (`UserProvider`, `HashProvider`)
 - `Api.IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers Postgres; Docker required)
 - `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure (solution-wide; not prefixed with `Api.`). Split by concern: `LayerTests`, `FeatureTests`, `BoundedContextTests`, `PersistenceTests` (allowed BCs listed in `TestAssemblies`).

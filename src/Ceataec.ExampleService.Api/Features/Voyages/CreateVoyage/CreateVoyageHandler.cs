@@ -23,13 +23,10 @@ public sealed class CreateVoyageHandler(
             return null;
         }
 
-        var voyage = new Voyage
-        {
-            Id = Guid.NewGuid(),
-            VesselId = command.VesselId,
-            Destination = command.Destination.Trim(),
-            DepartureAt = command.DepartureAt
-        };
+        var voyage = Voyage.Create(
+            command.VesselId,
+            command.Destination,
+            command.DepartureAt);
 
         dbContext.Voyages.Add(voyage);
         await dbContext.SaveChangesAsync(ct);

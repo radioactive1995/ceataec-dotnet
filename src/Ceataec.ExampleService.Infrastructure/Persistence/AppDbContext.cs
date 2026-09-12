@@ -8,7 +8,6 @@ namespace Ceataec.ExampleService.Infrastructure.Persistence;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<Vessel> Vessels => Set<Vessel>();
-    public DbSet<Tank> Tanks => Set<Tank>();
     public DbSet<Voyage> Voyages => Set<Voyage>();
     public DbSet<Certificate> Certificates => Set<Certificate>();
 
