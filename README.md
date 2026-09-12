@@ -26,11 +26,13 @@ This is **not** modular architecture: there is no `Modules/` folder. Bounded con
 
 The versioned adoption standard lives in [`plugins/ceataec-dotnet/spec/standard.md`](plugins/ceataec-dotnet/spec/standard.md). This repository owns the architecture, examples, skills and scoring rules. Review/refactor workflows use the bundled specification; scaffolding reads its pinned reference checkout.
 
-## AI adoption workflows (proposed)
+## AI developer workflows (proposed)
 
 Use **REVIEW-SCORE** for feedback only, **REFACTOR** for staged alignment of an existing service, or **SCAFFOLD** for a newly named starter with optional Aspire orchestration. **VERIFY** executes build/test checks separately from feedback-only review. Cursor and Claude Code share the same specifications and skills. Project skill attachment also supports Codex.
 
-See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.2.0 is a draft kit; C# and live harness acceptance checks are still required. Scaffolding currently retains the teaching domain and tests.
+For daily coding, use **CODE-CONVENTIONS**, **CHOOSE-PATTERN**, **IMPLEMENT-FEATURE**, **TRACE-FLOW**, **DIAGNOSE** or **REVIEW-CHANGE**. See [the developer guide](docs/developer-workflows.md) for focused examples.
+
+See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.3.0 adds everyday development skills; live harness acceptance remains a pilot step. Scaffolding currently retains the teaching domain and tests.
 
 ## Composition
 

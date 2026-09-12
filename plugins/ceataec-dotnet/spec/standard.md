@@ -1,7 +1,9 @@
 # CEATAEC .NET adoption standard
 
-Version: **0.2.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
+Version: **0.3.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
 commit `520c04af3d66868e473d39196cd058b96afa39d8`.
+Version 0.3.0 adds developer workflows; reference code, criteria and weights are unchanged
+from 0.2.0. The bundled version still identifies the complete instruction package.
 The machine-readable criteria and weights are in [rules.json](rules.json).
 Use this bundled version for a whole assessment; never silently compare against moving `main`.
 
