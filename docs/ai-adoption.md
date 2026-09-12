@@ -147,7 +147,9 @@ whole suite as passed when checks were skipped or blocked. Test output must stil
 be inspected for actual executed counts and skipped tests. REVIEW-SCORE does not
 call this runner. The GitHub template-validation workflow exercises the reference
 and both generated variants using .NET 10 and Docker. It is a repository quality
-check; it is not copied into generated services or used for production deployment.
+check; it and its Python maintenance tests are excluded from generated services.
+VERIFY treats MSB3277 assembly conflicts as build errors. No production deployment
+is performed.
 
 
 ```bash

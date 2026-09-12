@@ -1,7 +1,7 @@
 # CEATAEC .NET adoption standard
 
 Version: **0.2.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
-commit `c8c786f65ab94e2004983a024bc98e757eeeb310`.
+commit `520c04af3d66868e473d39196cd058b96afa39d8`.
 The machine-readable criteria and weights are in [rules.json](rules.json).
 Use this bundled version for a whole assessment; never silently compare against moving `main`.
 

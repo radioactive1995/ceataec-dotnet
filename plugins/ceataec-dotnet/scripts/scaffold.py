@@ -38,6 +38,8 @@ def render(template, name, aspire):
             if member.isdir():
                 continue
             path = PurePosixPath(member.name)
+            if path.parts[:2] == ("tests", "ai"):
+                continue  # Template-maintenance tooling is not a consumer test suite.
             if not member.isfile() or path.is_absolute() or ".." in path.parts:
                 raise ValueError(f"unsupported reference member: {member.name}")
             if "/Properties/Properties/" in member.name:

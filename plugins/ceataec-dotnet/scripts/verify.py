@@ -21,7 +21,7 @@ def commands(target, solution, scope="all"):
     projects = re.findall(r'"([^"\n]+\.csproj)"', solution_path.read_text(encoding="utf-8-sig"))
     checks = [
         {"name": "restore", "command": ["dotnet", "restore", relative]},
-        {"name": "build", "command": ["dotnet", "build", relative, "--no-restore"]},
+        {"name": "build", "command": ["dotnet", "build", relative, "--no-restore", "-warnaserror:MSB3277"]},
     ]
     for relative_project in projects:
         project = (solution_path.parent / relative_project.replace("\\", "/")).resolve()

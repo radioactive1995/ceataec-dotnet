@@ -174,6 +174,7 @@ class ScaffoldTests(unittest.TestCase):
                 self.assertNotIn(b"Ceataec.ExampleService", source)
                 self.assertNotIn(b"Ceataec_ExampleService", source)
                 self.assertFalse(any("Properties/Properties" in path for path in files))
+                self.assertFalse(any(path.startswith("tests/ai/") for path in files))
                 api_settings = json.loads(files["src/Acme.Orders.Api/appsettings.json"])
                 self.assertEqual(api_settings["Database"]["ConnectionString"], "")
                 factory = files["tests/Acme.Orders.Api.IntegrationTests/ExampleWebApplicationFactory.cs"]

@@ -27,7 +27,7 @@ and deliberately skipped checks.
 ## Reference fixes
 
 Initial review examined `a702f800b28a0a9b86d83af5495de8d7552bcc2c`.
-Generation now pins the hardened reference `c8c786f65ab94e2004983a024bc98e757eeeb310`.
+Generation now pins the hardened reference `520c04af3d66868e473d39196cd058b96afa39d8`.
 
 | Finding | Change | Evidence added |
 | --- | --- | --- |
@@ -36,6 +36,7 @@ Generation now pins the hardened reference `c8c786f65ab94e2004983a024bc98e757eee
 | Endpoint persistence checks only covered concrete AppDbContext | Added a compiled dependency rule against the persistence namespace, including ICommandDbContext | Architecture test alongside the existing concrete-type checks |
 | Domain independence did not explicitly forbid EF Core | Added an EF Core dependency prohibition | Architecture test |
 | A source string was treated as evidence of no-tracking query behavior | Added a real-engine read test that loads an existing aggregate and checks ChangeTracker remains empty | HTTP-created data plus named query execution; the source-text guard remains supplementary |
+| Standalone builds resolved conflicting EF Core relational assembly versions | Infrastructure pins the matching EF Core relational package; VERIFY fails on MSB3277 assembly conflicts | Hosted build matrix covers the reference and both generated variants |
 | Duplicate nested launch-settings file | Removed the tracked duplicate | Generated/reference layouts have one Api launch-settings path |
 
 ## Remaining acceptance boundaries
