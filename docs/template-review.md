@@ -9,7 +9,7 @@ only. Refactoring preserves contracts/data. Generation uses an immutable referen
 Updates preserve local work, and verification distinguishes passed, failed, blocked
 and deliberately skipped checks.
 
-## Implemented in version 0.2.0
+## Adoption foundation (0.2.0)
 
 - One specification and catalog, packaged for Cursor/Claude, with project attachment
   for Claude, Cursor and Codex. Root AGENTS/CLAUDE instructions route template work.
@@ -23,6 +23,16 @@ and deliberately skipped checks.
   the previous snapshot and refuse locally edited instructions.
 - GitHub validation covers Python tooling, the reference and both generated C# variants.
   No deployment pipeline is generated or deployed by this kit.
+
+## Everyday development (0.3.0)
+
+Six focused skills add convention guidance, pattern decisions, feature delivery,
+flow explanation, diagnosis and diff review. See [the developer guide](developer-workflows.md).
+The C# reference and scoring weights are unchanged. The version bump identifies the
+expanded instruction package and lets consumers upgrade without overwriting 0.2.0.
+The 0.2.0 [hosted validation](https://github.com/radioactive1995/ceataec-dotnet/actions/runs/34719904100)
+passed 21 Python tests and 74 .NET tests per variant with zero build warnings/errors.
+Current-head validation belongs to the new PR; live harness acceptance remains separate.
 
 ## Reference fixes
 

@@ -1,7 +1,9 @@
 # AI adoption workflows
 
-This is an initial **proposed** implementation, version 0.2.0. It supplies three adoption
-workflows plus explicit verification and one shared standard. It does not declare company policy approved.
+This is an initial **proposed** implementation, version 0.3.0. It supplies three adoption
+workflows, explicit verification and six everyday development skills with one shared standard.
+See [the developer guide](developer-workflows.md) for task selection and examples.
+This kit does not declare company policy approved.
 The template code reference is pinned in the plugin's `spec/rules.json`.
 
 | Mode | Result | Target writes |
@@ -14,7 +16,7 @@ The template code reference is pinned in the plugin's `spec/rules.json`.
 ## Design
 
 `plugins/ceataec-dotnet/spec/` owns the rules, scoring contract and workflow choices.
-The four `skills/*/SKILL.md` files own execution behavior and use relative links
+The ten `skills/*/SKILL.md` files own execution behavior and use relative links
 inside that package. Claude and Cursor manifests wrap the same payload. `AGENTS.md`
 and `CLAUDE.md` route work in this repository. The optional Claude reviewer agent
 has only read/search tools; role separation does not require multiple agents.
@@ -49,7 +51,7 @@ No target installation is needed for feedback-only reviews.
 ### Cursor: plugin or project skills
 
 For local plugin use, copy the complete `plugins/ceataec-dotnet` folder to
-`~/.cursor/plugins/local/ceataec-dotnet`, reload Cursor and verify its four skills
+`~/.cursor/plugins/local/ceataec-dotnet`, reload Cursor and verify its ten skills
 in Customize. This depends on the organization's local-plugin-import setting.
 Select the relevant skill from `/`. Use a company marketplace for managed rollout
 after the acceptance checks below; this PR does not publish or install company-wide.
@@ -58,7 +60,7 @@ after the acceptance checks below; this PR does not publish or install company-w
 
 If you want checked-in project skills, the attachment helper prepares a local
 snapshot with linked entry points. This **writes setup files**, so run it as setup,
-before a review, not inside REVIEW-SCORE. It does not edit existing AGENTS/CLAUDE
+before a review, not inside a feedback-only workflow. It does not edit existing AGENTS/CLAUDE
 instructions. Python 3.10+ is sufficient; no pip packages are required.
 
 ```bash
@@ -70,9 +72,9 @@ python3 /absolute/path/to/ceataec-dotnet/plugins/ceataec-dotnet/scripts/attach.p
 
 | Selection | Entry point directory | Invocation |
 | --- | --- | --- |
-| `claude` | `.claude/skills/ceataec-{mode}/` | `/ceataec-review-score`, `/ceataec-refactor`, `/ceataec-scaffold` |
+| `claude` | `.claude/skills/ceataec-{mode}/` | `/ceataec-{skill-name}`, e.g. `/ceataec-code-conventions` |
 | `cursor` | `.cursor/skills/ceataec-{mode}/` | Select the corresponding skill from `/` |
-| `codex` | `.agents/skills/ceataec-{mode}/` | `$ceataec-review-score`, `$ceataec-refactor`, `$ceataec-scaffold` |
+| `codex` | `.agents/skills/ceataec-{mode}/` | `$ceataec-{skill-name}`, e.g. `$ceataec-implement-feature` |
 
 Cursor also reads Claude/.agents skill directories, so use one attachment mode
 per consumer and avoid installing the native plugin and project skills together.
@@ -81,17 +83,18 @@ bundled `SKILL.md`; the workflow itself does not depend on slash-command syntax.
 
 The helper refuses conflicting files or target symlinks and is idempotent when
 contents match. Review its diff before committing setup. The snapshot manifest
-records file hashes and version. For an explicit update from an installed 0.1.0:
+records file hashes and version. For an explicit update from an installed 0.2.0:
 
 ```bash
 python3 /absolute/path/to/ceataec-dotnet/plugins/ceataec-dotnet/scripts/attach.py \
-  --target /absolute/path/to/consumer --harness claude --upgrade-from 0.1.0 --dry-run
+  --target /absolute/path/to/consumer --harness claude --upgrade-from 0.2.0 --dry-run
 ```
 
 Remove `--dry-run` to apply. Every old managed file must match its recorded hash;
 locally edited instructions stop the upgrade before any writes. The old snapshot
-is retained and the managed entry points move to 0.2.0. Keep service-specific
-exceptions outside the managed package. No automatic update daemon is installed.
+is retained and the managed entry points move to 0.3.0. Upgrades from 0.1.0
+are also supported by supplying that installed version. New skills receive new entry
+points. Keep service-specific exceptions outside the managed package. No automatic update daemon is installed.
 
 ## Example requests
 
@@ -99,7 +102,7 @@ exceptions outside the managed package. No automatic update daemon is installed.
 > score and coverage, distinguish correctness defects from template differences,
 > and return feedback only.
 
-> REFACTOR this service toward CEATAEC 0.2.0. Start with the Orders create/read
+> REFACTOR this service toward CEATAEC 0.3.0. Start with the Orders create/read
 > slices. Preserve existing routes, response/error shapes, authorization and
 > database schema. Run relevant checks and leave a reviewable diff.
 

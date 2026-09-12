@@ -28,7 +28,7 @@ verify = load("verify")
 
 class ScoringTests(unittest.TestCase):
     def document(self, entries):
-        return {"standardVersion": "0.2.0", "profile": "http-api-postgres",
+        return {"standardVersion": "0.3.0", "profile": "http-api-postgres",
                 "target": "fixture@abc", "assessments": entries}
 
     def test_unknowns_do_not_appear_as_full_evidence(self):
@@ -83,15 +83,21 @@ class ScoringTests(unittest.TestCase):
 
 
 class AttachmentTests(unittest.TestCase):
-    def install_previous(self, root):
+    def install_previous(self, root, version="0.2.0"):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
             old_plugin = Path(temp)
             import shutil
             shutil.copytree(PLUGIN, old_plugin, dirs_exist_ok=True)
             catalog = old_plugin / "spec/rules.json"
             contents = json.loads(catalog.read_text())
-            contents["version"] = "0.1.0"
+            contents["version"] = version
             catalog.write_text(json.dumps(contents))
+            # Older releases did not contain the everyday-development skills.
+            for skill in (old_plugin / "skills").iterdir():
+                if skill.name not in {"review-score", "refactor", "scaffold", "verify"}:
+                    shutil.rmtree(skill)
+            if version == "0.1.0":
+                shutil.rmtree(old_plugin / "skills/verify")
             files = attach.plan_attachment(root, "claude", plugin=old_plugin)
             for relative, data in files.items():
                 path = root / relative
@@ -99,22 +105,40 @@ class AttachmentTests(unittest.TestCase):
                 path.write_bytes(data)
 
     def test_upgrade_preserves_previous_snapshot_and_repoints_wrappers(self):
-        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
-            root = Path(temp)
-            self.install_previous(root)
-            previous = (root / ".ceataec/dotnet/0.1.0/spec/rules.json").read_bytes()
-            attach.attach(root, "claude", upgrade_from="0.1.0")
-            self.assertEqual(previous, (root / ".ceataec/dotnet/0.1.0/spec/rules.json").read_bytes())
-            self.assertIn("0.2.0", (root / ".claude/skills/ceataec-refactor/SKILL.md").read_text())
+        for version in ("0.1.0", "0.2.0"):
+            with self.subTest(version=version), tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+                root = Path(temp)
+                self.install_previous(root, version)
+                old_catalog = root / f".ceataec/dotnet/{version}/spec/rules.json"
+                previous = old_catalog.read_bytes()
+                attach.attach(root, "claude", upgrade_from=version)
+                self.assertEqual(previous, old_catalog.read_bytes())
+                self.assertIn("0.3.0", (root / ".claude/skills/ceataec-refactor/SKILL.md").read_text())
+                for name in ("code-conventions", "choose-pattern", "implement-feature",
+                             "trace-flow", "diagnose", "review-change"):
+                    self.assertTrue((root / f".claude/skills/ceataec-{name}/SKILL.md").is_file())
 
     def test_upgrade_refuses_locally_changed_spec_before_writing(self):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
             root = Path(temp)
             self.install_previous(root)
-            (root / ".ceataec/dotnet/0.1.0/spec/standard.md").write_text("Local amendments")
+            (root / ".ceataec/dotnet/0.2.0/spec/standard.md").write_text("Local amendments")
             with self.assertRaises(ValueError):
-                attach.attach(root, "claude", upgrade_from="0.1.0")
-            self.assertFalse((root / ".ceataec/dotnet/0.2.0").exists())
+                attach.attach(root, "claude", upgrade_from="0.2.0")
+            self.assertFalse((root / ".ceataec/dotnet/0.3.0").exists())
+
+    def test_new_skill_conflict_blocks_entire_upgrade(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+            root = Path(temp)
+            self.install_previous(root)
+            collision = root / ".claude/skills/ceataec-diagnose/SKILL.md"
+            collision.parent.mkdir(parents=True)
+            collision.write_text("Service-owned diagnosis instructions")
+            before = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+            with self.assertRaises(ValueError):
+                attach.attach(root, "claude", upgrade_from="0.2.0")
+            self.assertEqual(before, {p.relative_to(root): p.read_bytes()
+                                      for p in root.rglob("*") if p.is_file()})
 
     def test_each_harness_links_to_complete_snapshot_and_is_idempotent(self):
         for harness, directory in attach.HARNESS_DIR.items():
@@ -127,7 +151,20 @@ class AttachmentTests(unittest.TestCase):
                 for wrapper in (root / directory / "skills").glob("*/SKILL.md"):
                     link = re.search(r'\]\(([^)]+)\)', wrapper.read_text()).group(1)
                     self.assertTrue((wrapper.parent / link).resolve().is_file())
-                self.assertTrue((root / ".ceataec/dotnet/0.2.0/spec/rules.json").is_file())
+                self.assertTrue((root / ".ceataec/dotnet/0.3.0/spec/rules.json").is_file())
+
+    def test_attached_guidance_links_stay_inside_complete_package(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+            root = Path(temp)
+            attach.attach(root, "codex")
+            snapshot = root / ".ceataec/dotnet/0.3.0"
+            for source in snapshot.rglob("*.md"):
+                for link in re.findall(r'\]\(([^)]+)\)', source.read_text()):
+                    if "://" in link or link.startswith("#"):
+                        continue
+                    resolved = (source.parent / link.split("#", 1)[0]).resolve()
+                    self.assertTrue(resolved.is_relative_to(snapshot), (source, link))
+                    self.assertTrue(resolved.is_file(), (source, link))
 
     def test_conflict_preflight_does_not_partially_install(self):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
