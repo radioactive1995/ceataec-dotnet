@@ -76,6 +76,19 @@ public sealed class FeatureTests
     }
 
     [Fact]
+    public void Feature_endpoints_do_not_depend_on_any_persistence_namespace()
+    {
+        var result = Types.InAssembly(TestAssemblies.Api)
+            .That()
+            .HaveNameEndingWith("Endpoint")
+            .ShouldNot()
+            .HaveDependencyOn("Ceataec.ExampleService.Infrastructure.Persistence")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, TestAssemblies.Format(result));
+    }
+
+    [Fact]
     public void Command_handlers_do_not_reference_AppDbContext()
     {
         var failing = Types.InAssembly(TestAssemblies.Api)

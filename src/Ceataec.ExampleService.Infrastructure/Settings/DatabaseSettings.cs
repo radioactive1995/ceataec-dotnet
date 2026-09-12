@@ -8,4 +8,9 @@ public sealed record DatabaseSettings
 
     [Required]
     public required string ConnectionString { get; init; }
+
+    public string GetEffectiveConnectionString(string? preferredConnectionString)
+        => string.IsNullOrWhiteSpace(preferredConnectionString)
+            ? ConnectionString
+            : preferredConnectionString;
 }
