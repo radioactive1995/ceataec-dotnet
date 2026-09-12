@@ -24,9 +24,13 @@ This is **not** modular architecture: there is no `Modules/` folder. Bounded con
 
 ## Relation to CEATAEC-AI-Brain
 
-Coding agents working in other repos do **not** need to clone this project. They follow the markdown conventions in CEATAEC-AI-Brain (`vault/Brain/Preferences/dotnet-conventions.md`).
+The versioned adoption standard now lives in [`plugins/ceataec-dotnet/spec/standard.md`](plugins/ceataec-dotnet/spec/standard.md). The Brain note (`vault/Brain/Preferences/dotnet-conventions.md`) should link to a released version of that standard; updating the external Brain note is a separate task. Review/refactor workflows can use the bundled plugin without cloning the C# reference. Scaffolding reads a pinned reference checkout.
 
-When this skeleton’s layout or invariants change, update that Brain note by hand (or via a future sync). The Brain has no direct path or submodule link to this repo.
+## AI adoption workflows (proposed)
+
+Use **REVIEW-SCORE** for feedback only, **REFACTOR** for staged alignment of an existing service, or **SCAFFOLD** for a newly named starter with optional Aspire orchestration. Cursor and Claude Code share the same specifications and skills. Project skill attachment also supports Codex.
+
+See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.1.0 is a draft kit; C# and live harness acceptance checks are still required. Scaffolding currently retains the teaching domain and tests.
 
 ## Composition
 
