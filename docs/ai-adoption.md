@@ -1,7 +1,7 @@
 # AI adoption workflows
 
-This is an initial **proposed** implementation, version 0.1.0. It supplies three
-workflows and one shared standard. It does not declare company policy approved.
+This is an initial **proposed** implementation, version 0.2.0. It supplies three adoption
+workflows plus explicit verification and one shared standard. It does not declare company policy approved.
 The template code reference is pinned in the plugin's `spec/rules.json`.
 
 | Mode | Result | Target writes |
@@ -9,11 +9,12 @@ The template code reference is pinned in the plugin's `spec/rules.json`.
 | REVIEW-SCORE | Evidence, scores/coverage, strengths, gaps, code smells and prioritized actions in chat | None, including no build/test/restore or report files |
 | REFACTOR | Incremental source changes preserving contracts/data, validation and migration record | Scoped edits when requested; no automatic commit/push/deploy |
 | SCAFFOLD | Newly named starter, optional AppHost, tests and provenance | New destination only |
+| VERIFY | Restore/build/unit/architecture/integration execution evidence | Build and test outputs |
 
 ## Design
 
 `plugins/ceataec-dotnet/spec/` owns the rules, scoring contract and workflow choices.
-The three `skills/*/SKILL.md` files own execution behavior and use relative links
+The four `skills/*/SKILL.md` files own execution behavior and use relative links
 inside that package. Claude and Cursor manifests wrap the same payload. `AGENTS.md`
 and `CLAUDE.md` route work in this repository. The optional Claude reviewer agent
 has only read/search tools; role separation does not require multiple agents.
@@ -42,13 +43,13 @@ claude --plugin-dir /absolute/path/to/ceataec-dotnet/plugins/ceataec-dotnet
 ```
 
 Then invoke `/ceataec-dotnet:review-score`, `/ceataec-dotnet:refactor` or
-`/ceataec-dotnet:scaffold`, supplying the target or new service choices.
+`/ceataec-dotnet:scaffold`; `/ceataec-dotnet:verify` executes checks, supplying the target or new service choices.
 No target installation is needed for feedback-only reviews.
 
 ### Cursor: plugin or project skills
 
 For local plugin use, copy the complete `plugins/ceataec-dotnet` folder to
-`~/.cursor/plugins/local/ceataec-dotnet`, reload Cursor and verify its three skills
+`~/.cursor/plugins/local/ceataec-dotnet`, reload Cursor and verify its four skills
 in Customize. This depends on the organization's local-plugin-import setting.
 Select the relevant skill from `/`. Use a company marketplace for managed rollout
 after the acceptance checks below; this PR does not publish or install company-wide.
@@ -80,10 +81,17 @@ bundled `SKILL.md`; the workflow itself does not depend on slash-command syntax.
 
 The helper refuses conflicting files or target symlinks and is idempotent when
 contents match. Review its diff before committing setup. The snapshot manifest
-records file hashes and version. Updates are explicit: compare a new release,
-retain local exceptions, and replace/remove only previously installed unmodified
-files in a reviewed change. This helper intentionally refuses an in-place update
-that would overwrite an older entry point. There is no automatic update daemon.
+records file hashes and version. For an explicit update from an installed 0.1.0:
+
+```bash
+python3 /absolute/path/to/ceataec-dotnet/plugins/ceataec-dotnet/scripts/attach.py \
+  --target /absolute/path/to/consumer --harness claude --upgrade-from 0.1.0 --dry-run
+```
+
+Remove `--dry-run` to apply. Every old managed file must match its recorded hash;
+locally edited instructions stop the upgrade before any writes. The old snapshot
+is retained and the managed entry points move to 0.2.0. Keep service-specific
+exceptions outside the managed package. No automatic update daemon is installed.
 
 ## Example requests
 
@@ -91,7 +99,7 @@ that would overwrite an older entry point. There is no automatic update daemon.
 > score and coverage, distinguish correctness defects from template differences,
 > and return feedback only.
 
-> REFACTOR this service toward CEATAEC 0.1.0. Start with the Orders create/read
+> REFACTOR this service toward CEATAEC 0.2.0. Start with the Orders create/read
 > slices. Preserve existing routes, response/error shapes, authorization and
 > database schema. Run relevant checks and leave a reviewable diff.
 
@@ -114,8 +122,8 @@ retain ServiceDefaults; no-AppHost also removes the Api's Aspire Npgsql enrichme
 and associated database retries/health registration. It does not remove telemetry.
 The generated README explains run/configuration requirements. The generator
 renames paths, namespaces, solution references and Aspire project identifiers,
-assigns fresh user-secrets identity, clears connection defaults, and makes the test
-factory override both connection keys. It reads committed source, ignoring dirty
+assigns fresh user-secrets identity, clears connection defaults, and inherits the hardened reference test
+factory that overrides both connection keys. It reads committed source, ignoring dirty
 or untracked reference files. No existing output directory is accepted.
 
 This first release retains the teaching domain and its tests. Empty/business-specific
@@ -124,6 +132,25 @@ anchors or migrations. Database selection, identity-provider selection and nativ
 `dotnet new` packaging are intentionally not advertised as implemented options.
 
 ## Validate and release
+
+Use VERIFY independently or after refactoring/scaffolding:
+
+```bash
+python3 plugins/ceataec-dotnet/scripts/verify.py \
+  --target . --solution Ceataec.ExampleService.sln --plan
+python3 plugins/ceataec-dotnet/scripts/verify.py \
+  --target . --solution Ceataec.ExampleService.sln --scope all
+```
+
+`--scope unit` explicitly omits integration tests. The runner never reports the
+whole suite as passed when checks were skipped or blocked. Test output must still
+be inspected for actual executed counts and skipped tests. REVIEW-SCORE does not
+call this runner. The GitHub template-validation workflow exercises the reference
+and both generated variants using .NET 10 and Docker. It is a repository quality
+check; it and its Python maintenance tests are excluded from generated services.
+VERIFY treats MSB3277 assembly conflicts as build errors. No production deployment
+is performed.
+
 
 ```bash
 python3 -m unittest discover -s tests/ai -v
@@ -140,9 +167,10 @@ the actual approved Cursor and Claude versions. Review must leave the target's
 files and Git state unchanged, including ignored/untracked files. Test refactoring
 on a disposable service with fixed API/DB contracts and verify them afterward.
 
-The initial authoring environment has no .NET SDK or Cursor/Claude runtimes.
-Those execution checks remain pending; this is a draft adoption kit, not a claim
-that generated services or harness behavior have been runtime-verified.
+The authoring environment cannot start CoreCLR (HRESULT 0x8007000E), even after
+downloading a .NET 10 SDK, and has no Docker or Cursor/Claude runtimes. Local C#
+execution and live harness checks are therefore blocked. Consult the PR validation
+workflow for hosted execution evidence; do not infer success from the workflow file.
 
 ## Decisions for the company pilot
 

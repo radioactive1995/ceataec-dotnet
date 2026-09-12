@@ -3,6 +3,7 @@ using Ceataec.ExampleService.Infrastructure.Providers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -39,7 +40,12 @@ public sealed class ExampleWebApplicationFactory : WebApplicationFactory<Program
     {
         ArgumentNullException.ThrowIfNull(_postgres);
 
-        builder.UseSetting("Database:ConnectionString", _postgres.GetConnectionString());
+        builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:ceataec"] = _postgres.GetConnectionString(),
+                ["Database:ConnectionString"] = _postgres.GetConnectionString(),
+            }));
 
         builder.ConfigureServices(services =>
         {
@@ -53,6 +59,8 @@ public sealed class ExampleWebApplicationFactory : WebApplicationFactory<Program
         var host = base.CreateHost(builder);
         using var scope = host.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.NotNull(_postgres);
+        Assert.Equal(_postgres.GetConnectionString(), db.Database.GetConnectionString());
         db.Database.Migrate();
         return host;
     }

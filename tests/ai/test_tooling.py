@@ -6,6 +6,7 @@ import re
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,11 +23,12 @@ def load(name):
 score = load("score")
 attach = load("attach")
 scaffold = load("scaffold")
+verify = load("verify")
 
 
 class ScoringTests(unittest.TestCase):
     def document(self, entries):
-        return {"standardVersion": "0.1.0", "profile": "http-api-postgres",
+        return {"standardVersion": "0.2.0", "profile": "http-api-postgres",
                 "target": "fixture@abc", "assessments": entries}
 
     def test_unknowns_do_not_appear_as_full_evidence(self):
@@ -81,6 +83,39 @@ class ScoringTests(unittest.TestCase):
 
 
 class AttachmentTests(unittest.TestCase):
+    def install_previous(self, root):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+            old_plugin = Path(temp)
+            import shutil
+            shutil.copytree(PLUGIN, old_plugin, dirs_exist_ok=True)
+            catalog = old_plugin / "spec/rules.json"
+            contents = json.loads(catalog.read_text())
+            contents["version"] = "0.1.0"
+            catalog.write_text(json.dumps(contents))
+            files = attach.plan_attachment(root, "claude", plugin=old_plugin)
+            for relative, data in files.items():
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+
+    def test_upgrade_preserves_previous_snapshot_and_repoints_wrappers(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+            root = Path(temp)
+            self.install_previous(root)
+            previous = (root / ".ceataec/dotnet/0.1.0/spec/rules.json").read_bytes()
+            attach.attach(root, "claude", upgrade_from="0.1.0")
+            self.assertEqual(previous, (root / ".ceataec/dotnet/0.1.0/spec/rules.json").read_bytes())
+            self.assertIn("0.2.0", (root / ".claude/skills/ceataec-refactor/SKILL.md").read_text())
+
+    def test_upgrade_refuses_locally_changed_spec_before_writing(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
+            root = Path(temp)
+            self.install_previous(root)
+            (root / ".ceataec/dotnet/0.1.0/spec/standard.md").write_text("Local amendments")
+            with self.assertRaises(ValueError):
+                attach.attach(root, "claude", upgrade_from="0.1.0")
+            self.assertFalse((root / ".ceataec/dotnet/0.2.0").exists())
+
     def test_each_harness_links_to_complete_snapshot_and_is_idempotent(self):
         for harness, directory in attach.HARNESS_DIR.items():
             with self.subTest(harness=harness), tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
@@ -92,7 +127,7 @@ class AttachmentTests(unittest.TestCase):
                 for wrapper in (root / directory / "skills").glob("*/SKILL.md"):
                     link = re.search(r'\]\(([^)]+)\)', wrapper.read_text()).group(1)
                     self.assertTrue((wrapper.parent / link).resolve().is_file())
-                self.assertTrue((root / ".ceataec/dotnet/0.1.0/spec/rules.json").is_file())
+                self.assertTrue((root / ".ceataec/dotnet/0.2.0/spec/rules.json").is_file())
 
     def test_conflict_preflight_does_not_partially_install(self):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
@@ -139,10 +174,11 @@ class ScaffoldTests(unittest.TestCase):
                 self.assertNotIn(b"Ceataec.ExampleService", source)
                 self.assertNotIn(b"Ceataec_ExampleService", source)
                 self.assertFalse(any("Properties/Properties" in path for path in files))
+                self.assertFalse(any(path.startswith("tests/ai/") for path in files))
                 api_settings = json.loads(files["src/Acme.Orders.Api/appsettings.json"])
                 self.assertEqual(api_settings["Database"]["ConnectionString"], "")
                 factory = files["tests/Acme.Orders.Api.IntegrationTests/ExampleWebApplicationFactory.cs"]
-                self.assertIn(b'UseSetting("ConnectionStrings:ceataec", _postgres.GetConnectionString())', factory)
+                self.assertIn(b'["ConnectionStrings:ceataec"] = _postgres.GetConnectionString()', factory)
                 self.assertEqual(metadata["aspire"], aspire == "yes")
                 if aspire == "no":
                     self.assertNotIn(b"EnrichNpgsqlDbContext", source)
@@ -188,6 +224,48 @@ class ScaffoldTests(unittest.TestCase):
         project = "src/Acme.Orders.AppHost/Acme.Orders.AppHost.csproj"
         self.assertNotEqual(ET.fromstring(first[project]).find(".//UserSecretsId").text,
                             ET.fromstring(second[project]).find(".//UserSecretsId").text)
+
+
+class VerificationTests(unittest.TestCase):
+    def run_fixture(self, fail=None, scope="all", docker=True, sdk=True):
+        calls = []
+        def runner(command, **kwargs):
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 1 if fail and fail in command else 0)
+        result = verify.run_checks(ROOT, "Ceataec.ExampleService.sln", scope,
+                                   runner=runner, which=lambda tool: tool if (sdk if tool == "dotnet" else docker) else None)
+        return result, calls
+
+    def test_restore_failure_blocks_build_and_tests(self):
+        result, calls = self.run_fixture(fail="restore")
+        self.assertEqual(len(calls), 1)
+        self.assertFalse(result["selectedChecksPassed"])
+        self.assertTrue(all(item["status"] == "blocked" for item in result["checks"][1:]))
+
+    def test_missing_sdk_is_blocked_not_passed(self):
+        result, calls = self.run_fixture(sdk=False)
+        self.assertEqual(calls, [])
+        self.assertFalse(result["selectedChecksPassed"])
+
+    def test_missing_docker_does_not_prevent_unit_tests(self):
+        result, calls = self.run_fixture(docker=False)
+        self.assertEqual(sum("test" in c for c in calls), 4)
+        self.assertFalse(result["selectedChecksPassed"])
+        self.assertEqual(next(c for c in result["checks"] if c.get("integration"))["status"], "blocked")
+
+    def test_unit_scope_does_not_claim_full_verification(self):
+        result, calls = self.run_fixture(scope="unit", docker=False)
+        self.assertTrue(result["selectedChecksPassed"])
+        self.assertFalse(result["allChecksPassed"])
+        self.assertFalse(any("docker" in c for c in calls))
+
+    def test_plan_does_not_execute_target_code(self):
+        with patch.object(subprocess, "run", side_effect=AssertionError("must not execute")):
+            self.assertEqual(len(verify.commands(ROOT, "Ceataec.ExampleService.sln")), 7)
+
+    def test_outside_solution_rejected(self):
+        with self.assertRaises(ValueError):
+            verify.commands(ROOT, "../other.sln")
 
 
 if __name__ == "__main__":

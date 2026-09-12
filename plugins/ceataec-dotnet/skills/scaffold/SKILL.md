@@ -24,8 +24,8 @@ Run the bundled `../../scripts/scaffold.py` with explicit `--template`, `--name`
 The script uses committed content at the bundled reference, accepts only a new output
 directory, and never executes .NET, installs dependencies, commits or deploys.
 
-Then run restore/build, unit/architecture tests and Docker integration tests when
-available. Explain failures and missing prerequisites. For no AppHost, configure an
+Then use [VERIFY](../verify/SKILL.md) for restore/build, unit/architecture tests and
+Docker integration tests. Explain failures and missing prerequisites. For no AppHost, configure an
 external local Postgres 18 connection; telemetry/health defaults remain. Ask about
 auth/production settings only when implementing those decisions, not to generate a demo.
 Show the run command, selected choices, exact baseline and remaining production work.

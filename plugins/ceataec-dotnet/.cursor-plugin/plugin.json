@@ -1,6 +1,8 @@
 {
   "name": "ceataec-dotnet",
-  "version": "0.1.0",
-  "description": "Review, refactor and scaffold services against the proposed CEATAEC .NET standard.",
-  "author": { "name": "CEATAEC" }
+  "version": "0.2.0",
+  "description": "Review, refactor, scaffold and verify services against the proposed CEATAEC .NET standard.",
+  "author": {
+    "name": "CEATAEC"
+  }
 }

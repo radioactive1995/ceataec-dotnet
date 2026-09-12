@@ -7,7 +7,7 @@ REVIEW-SCORE. Optional JSON follows this contract; it can be piped to `scripts/s
 
 ```json
 {
-  "standardVersion": "0.1.0",
+  "standardVersion": "0.2.0",
   "profile": "http-api-postgres",
   "target": "owner/service@commit-or-worktree-description",
   "assessments": [

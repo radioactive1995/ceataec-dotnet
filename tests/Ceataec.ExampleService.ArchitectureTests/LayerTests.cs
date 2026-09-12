@@ -5,6 +5,17 @@ namespace Ceataec.ExampleService.ArchitectureTests;
 public sealed class LayerTests
 {
     [Fact]
+    public void Domain_does_not_depend_on_EntityFrameworkCore()
+    {
+        var result = Types.InAssembly(TestAssemblies.Domain)
+            .ShouldNot()
+            .HaveDependencyOn("Microsoft.EntityFrameworkCore")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, TestAssemblies.Format(result));
+    }
+
+    [Fact]
     public void Domain_does_not_reference_Infrastructure_Api_or_FastEndpoints()
     {
         Assert.True(

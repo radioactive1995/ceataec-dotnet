@@ -38,6 +38,8 @@ def render(template, name, aspire):
             if member.isdir():
                 continue
             path = PurePosixPath(member.name)
+            if path.parts[:2] == ("tests", "ai"):
+                continue  # Template-maintenance tooling is not a consumer test suite.
             if not member.isfile() or path.is_absolute() or ".." in path.parts:
                 raise ValueError(f"unsupported reference member: {member.name}")
             if "/Properties/Properties/" in member.name:
@@ -59,11 +61,6 @@ def render(template, name, aspire):
                 text = json.dumps(settings, indent=2) + "\n"
             if path.name == "AppHost.cs":
                 text = text.replace('AddDatabase("ceataec")', f'AddDatabase("ceataec", "{database}")')
-            if path.name == "ExampleWebApplicationFactory.cs":
-                text = text.replace(
-                    '        builder.UseSetting("Database:ConnectionString", _postgres.GetConnectionString());',
-                    '        builder.UseSetting("ConnectionStrings:ceataec", _postgres.GetConnectionString());\n'
-                    '        builder.UseSetting("Database:ConnectionString", _postgres.GetConnectionString());')
             if aspire == "no":
                 if path.name == "Program.cs":
                     text = text.replace("builder.EnrichNpgsqlDbContext<AppDbContext>();\n", "")
@@ -117,7 +114,7 @@ Generation does not run .NET verification. Resolve restore/build/test failures b
 adoption. Implement real authorization (the sample allows anonymous access), production
 probe/schema deployment decisions and company provisioning before shipping.
 See `.ceataec-template.json` for baseline provenance. Use the reference repository's
-AI attachment tooling if you want the three adoption workflows in this service.
+AI attachment tooling if you want the adoption and verification workflows in this service.
 """.encode()
     return files, metadata
 
