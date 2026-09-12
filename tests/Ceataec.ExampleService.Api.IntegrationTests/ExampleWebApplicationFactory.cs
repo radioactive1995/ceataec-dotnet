@@ -15,7 +15,7 @@ public sealed class ExampleWebApplicationFactory : WebApplicationFactory<Program
 
     public async Task InitializeAsync()
     {
-        _postgres = new PostgreSqlBuilder("postgres:16-alpine")
+        _postgres = new PostgreSqlBuilder("postgres:18-alpine")
             .WithDatabase("ceataec_example_tests")
             .WithUsername("postgres")
             .WithPassword("postgres")

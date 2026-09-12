@@ -11,6 +11,7 @@ public sealed class TankConfiguration : IEntityTypeConfiguration<Tank>
     {
         builder.ToTable("tanks");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasDefaultValueSql(PostgresSql.NewUuid);
         builder.Property(x => x.Name).HasMaxLength(Tank.NameMaxLength).IsRequired();
         builder.Property(x => x.CapacityCubicMeters).HasPrecision(18, 2);
         builder.HasOne(x => x.Vessel)

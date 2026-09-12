@@ -37,7 +37,6 @@ public sealed class Tank : Entity
 
         return new Tank
         {
-            Id = Guid.NewGuid(),
             VesselId = vessel.Id,
             Vessel = vessel,
             Name = trimmedName,

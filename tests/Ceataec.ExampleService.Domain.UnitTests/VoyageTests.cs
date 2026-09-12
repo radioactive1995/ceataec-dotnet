@@ -6,14 +6,14 @@ namespace Ceataec.ExampleService.Domain.UnitTests;
 public sealed class VoyageTests
 {
     [Fact]
-    public void Create_sets_identity_and_normalizes_destination()
+    public void Create_normalizes_destination()
     {
         var vesselId = Guid.NewGuid();
         var departureAt = DateTimeOffset.UtcNow.AddDays(1);
 
         var voyage = Voyage.Create(vesselId, "  Rotterdam  ", departureAt);
 
-        Assert.NotEqual(Guid.Empty, voyage.Id);
+        Assert.Equal(Guid.Empty, voyage.Id);
         Assert.Equal(vesselId, voyage.VesselId);
         Assert.Equal("Rotterdam", voyage.Destination);
         Assert.Equal(departureAt, voyage.DepartureAt);

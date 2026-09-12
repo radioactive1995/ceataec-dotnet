@@ -39,7 +39,6 @@ public sealed class Certificate : AggregateRoot
 
         return new Certificate
         {
-            Id = Guid.NewGuid(),
             VesselId = vesselId,
             Type = trimmedType,
             IssuedOn = issuedOn

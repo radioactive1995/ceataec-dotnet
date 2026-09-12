@@ -11,6 +11,7 @@ public sealed class VesselConfiguration : IEntityTypeConfiguration<Vessel>
     {
         builder.ToTable("vessels");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasDefaultValueSql(PostgresSql.NewUuid);
         builder.Property(x => x.Name).HasMaxLength(Vessel.NameMaxLength).IsRequired();
         builder.Property(x => x.ImoNumber)
             .HasConversion(

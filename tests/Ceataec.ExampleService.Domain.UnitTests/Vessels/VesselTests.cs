@@ -7,13 +7,13 @@ namespace Ceataec.ExampleService.Domain.UnitTests.Vessels;
 public sealed class VesselTests
 {
     [Fact]
-    public void Create_sets_identity_and_trimmed_fields()
+    public void Create_trims_fields()
     {
         var imo = ImoNumber.Create("IMO9999999");
 
         var vessel = Vessel.Create("  Aurora  ", imo, "  user-1  ");
 
-        Assert.NotEqual(Guid.Empty, vessel.Id);
+        Assert.Equal(Guid.Empty, vessel.Id);
         Assert.Equal("Aurora", vessel.Name);
         Assert.Equal(imo, vessel.ImoNumber);
         Assert.Equal("user-1", vessel.CreatedBy);
@@ -66,7 +66,7 @@ public sealed class VesselTests
         vessel.AddTank("  Cargo 1  ", 1250.50m);
 
         var tank = Assert.Single(vessel.Tanks);
-        Assert.NotEqual(Guid.Empty, tank.Id);
+        Assert.Equal(Guid.Empty, tank.Id);
         Assert.Equal(vessel.Id, tank.VesselId);
         Assert.Same(vessel, tank.Vessel);
         Assert.Equal("Cargo 1", tank.Name);

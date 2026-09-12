@@ -39,7 +39,6 @@ public sealed class Voyage : AggregateRoot
 
         return new Voyage
         {
-            Id = Guid.NewGuid(),
             VesselId = vesselId,
             Destination = trimmedDestination,
             DepartureAt = departureAt

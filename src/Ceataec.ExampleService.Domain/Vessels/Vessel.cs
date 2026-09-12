@@ -50,7 +50,6 @@ public sealed class Vessel : AggregateRoot
 
         return new Vessel
         {
-            Id = Guid.NewGuid(),
             Name = trimmedName,
             ImoNumber = imoNumber,
             CreatedBy = trimmedCreatedBy,

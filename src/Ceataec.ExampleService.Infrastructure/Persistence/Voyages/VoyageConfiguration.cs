@@ -10,6 +10,7 @@ public sealed class VoyageConfiguration : IEntityTypeConfiguration<Voyage>
     {
         builder.ToTable("voyages");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasDefaultValueSql(PostgresSql.NewUuid);
         builder.Property(x => x.VesselId).IsRequired();
         builder.Property(x => x.Destination).HasMaxLength(Voyage.DestinationMaxLength).IsRequired();
         builder.HasIndex(x => x.VesselId);
