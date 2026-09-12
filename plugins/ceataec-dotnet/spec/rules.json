@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "status": "proposed",
+  "profile": "http-api-postgres",
+  "referenceRepository": "https://github.com/radioactive1995/ceataec-dotnet",
+  "referenceCommit": "a702f800b28a0a9b86d83af5495de8d7552bcc2c",
+  "rules": [
+    {"id":"ARC-001","weight":15,"kind":"template","title":"Project dependency boundaries","criterion":"Api, Domain and Infrastructure responsibilities and dependency direction follow standard.md; Domain has no HTTP/persistence dependency."},
+    {"id":"SLI-001","weight":10,"kind":"template","title":"Versioned feature slices","criterion":"Use cases own their HTTP/CQRS contracts in versioned slices; endpoints delegate orchestration and avoid persistence access."},
+    {"id":"DOM-001","weight":10,"kind":"template","title":"Domain behavior and bounded contexts","criterion":"Sibling BCs, aggregate encapsulation and domain factories enforce relevant invariants; business rules are not only request validation."},
+    {"id":"PER-001","weight":15,"kind":"template","title":"Command and query persistence","criterion":"Aggregate-only command access, named no-tracking reads, deliberate FK boundaries and preserved provider-compatible migration history."},
+    {"id":"HTTP-001","weight":10,"kind":"template","title":"HTTP results and validation","criterion":"Typed result unions and central ProblemDetails cover expected errors and validation; exceptions do not leak internals."},
+    {"id":"VER-001","weight":5,"kind":"template","title":"Contract versioning","criterion":"Explicit versions and release-group OpenAPI; existing client contracts preserved with relevant version tests."},
+    {"id":"TST-001","weight":15,"kind":"readiness","title":"Meaningful verification","criterion":"Domain, HTTP and architecture coverage exists; integration uses real production engine/migrations; execution status is evidenced separately."},
+    {"id":"OPS-001","weight":5,"kind":"readiness","title":"Operational behavior","criterion":"Health, telemetry and resilience exist with a documented production probe/schema deployment strategy; Aspire orchestration is optional."},
+    {"id":"CFG-001","weight":5,"kind":"readiness","title":"Configuration and secrets","criterion":"Required settings validate actual selected values; secrets and sample credentials are not production defaults; precedence is tested."},
+    {"id":"SEC-001","weight":5,"kind":"readiness","title":"Access and sensitive data","criterion":"Endpoint authorization/public access is deliberate and tested; logging avoids sensitive data; hashing is not assumed to anonymize ids."},
+    {"id":"MNT-001","weight":3,"kind":"readiness","title":"Maintainable build and code","criterion":"Dependencies/SDK policy and reproducible verification are documented; concrete duplication, dead code and misleading checks are addressed."},
+    {"id":"GOV-001","weight":2,"kind":"template","title":"Adoption provenance","criterion":"The target identifies its standard version, profile and documented exceptions without claiming proposed policy is approved."}
+  ]
+}
