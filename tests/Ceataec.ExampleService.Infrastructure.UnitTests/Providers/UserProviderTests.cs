@@ -26,7 +26,7 @@ public sealed class UserProviderTests
     }
 
     [Fact]
-    public void GetCurrentUserId_throws_when_user_missing()
+    public void GetCurrentUserId_returns_anonymous_when_user_missing()
     {
         var accessor = new HttpContextAccessor
         {
@@ -35,6 +35,6 @@ public sealed class UserProviderTests
 
         var sut = new UserProvider(accessor);
 
-        Assert.Throws<InvalidOperationException>(() => sut.GetCurrentUserId());
+        Assert.Equal("anonymous", sut.GetCurrentUserId());
     }
 }

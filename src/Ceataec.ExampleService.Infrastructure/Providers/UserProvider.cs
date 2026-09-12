@@ -11,11 +11,6 @@ public sealed class UserProvider(IHttpContextAccessor httpContextAccessor) : IUs
         var userId = user?.FindFirstValue(ClaimTypes.NameIdentifier)
                      ?? user?.Identity?.Name;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            throw new InvalidOperationException("Current user could not be resolved from the HTTP context.");
-        }
-
-        return userId;
+        return string.IsNullOrWhiteSpace(userId) ? "anonymous" : userId;
     }
 }

@@ -1,12 +1,12 @@
-# CEATAEC-AI-Brain-Dotnet
+# CEATAEC .NET template
 
 The **envisioned structure** of a CEATAEC .NET backend. This repo is the runnable teaching skeleton — coding agents and developers should **copy this layout**, not treat the sample as a shipping product.
 
-Target: **.NET 10** (`net10.0`), multi-project solution (Api + Domain + Infrastructure), FastEndpoints, EF Core.
+Target: **.NET 10** (`net10.0`), multi-project solution (AppHost + ServiceDefaults + Api + Domain + Infrastructure), FastEndpoints, EF Core, Aspire for local run.
 
 ## Purpose
 
-- Show the canonical shape: Api host, Domain and Infrastructure class libraries, Features and Cqrs in the host.
+- Show the canonical shape: Aspire AppHost for local orchestration, ServiceDefaults, Api host (Features and Cqrs), Domain and Infrastructure class libraries.
 - Encode invariants as code (project references, architecture tests, union-type handlers, FK vs `VesselId`).
 - Give a concrete reference when creating or reviewing new .NET services.
 
@@ -18,7 +18,7 @@ Target: **.NET 10** (`net10.0`), multi-project solution (Api + Domain + Infrastr
 
 ## What this is not
 
-Docker, Terraform, and Azure DevOps pipelines are **not** here — they come from the `build-repositories` seed when a real service repo is provisioned.
+Terraform and Azure DevOps pipelines are **not** here — they come from the `build-repositories` seed when a real service repo is provisioned. Docker is used only for **local** orchestration (Aspire Postgres) and integration tests (Testcontainers). This skeleton does not ship compose files, cloud deploy, or ACA.
 
 This is **not** modular architecture: there is no `Modules/` folder. Bounded contexts appear as subfolders under Domain, Features, and Infrastructure Persistence.
 
@@ -30,29 +30,45 @@ When this skeleton’s layout or invariants change, update that Brain note by ha
 
 ## Composition
 
-`Program.cs` (Api host) only composes DI then the API pipeline:
+**F5 / one-click local run** is `Ceataec.ExampleService.AppHost`. It starts Postgres 18 (persistent container + volume, pgAdmin) and the Api, then applies EF migrations in Development. Stopping AppHost leaves Postgres and pgAdmin running so the next start reuses them.
+
+```bash
+dotnet run --project src/Ceataec.ExampleService.AppHost
+```
+
+The Api can still run alone against `Database:ConnectionString` in `appsettings`. Aspire injects `ConnectionStrings:ceataec`; `AddInfrastructure` prefers that, then falls back to `Database:ConnectionString`.
+
+`Program.cs` (Api) composes service defaults, DI, then the pipeline:
 
 ```csharp
+builder.AddServiceDefaults();
+
 builder.Services
     .AddApi()
     .AddInfrastructure(builder.Configuration);
 
+builder.EnrichNpgsqlDbContext<AppDbContext>();
+
 var app = builder.Build();
+// Development: Migrate()
+app.MapDefaultEndpoints();
 app.UseApi();
 app.Run();
 ```
 
 | Project | Owns |
 |---|---|
-| `Ceataec.ExampleService.Api` | HTTP host: `Program`, pipeline (`DependencyInjection`, `WebApplicationExtensions`, `Middleware/`, `Processors/`, `ExceptionHandling/`), `Features/`, `Cqrs/` |
+| `Ceataec.ExampleService.AppHost` | Local Aspire orchestration only (Postgres 18, pgAdmin, Api). Not a deploy target. |
+| `Ceataec.ExampleService.ServiceDefaults` | Shared Aspire defaults: health (`/health`, `/alive`), OpenTelemetry, service discovery, HttpClient resilience |
+| `Ceataec.ExampleService.Api` | HTTP host: `Program`, pipeline (`DependencyInjection`, `WebApplicationExtensions`, `Middleware/`, `Processors/`, `ExceptionHandling/`), `Http/` (ProblemDetails mapping), `Features/`, `Cqrs/` |
 | `Ceataec.ExampleService.Domain` | Domain by BC (`Vessels`, `Voyages`, `Certificates`): aggregates/entities/VOs — ErrorOr for results; no project refs to Infra/Api |
-| `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs, `Migrations/`), `AddInfrastructure` — references Domain |
+| `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs, `Migrations/`), `AddInfrastructure` — references Domain. No Aspire packages. |
 
-**References:** Infrastructure → Domain; Api → Domain + Infrastructure.
+**References:** Infrastructure → Domain; Api → Domain + Infrastructure + ServiceDefaults; AppHost → Api.
 
-`AddInfrastructure` registers Settings, providers, and DbContext. Command/query handlers are discovered with FastEndpoints. One public type per file.
+`AddInfrastructure` registers Settings, providers, and DbContext. `EnrichNpgsqlDbContext` (Api only) adds Aspire retries/health/telemetry on that existing context. Command/query handlers are discovered with FastEndpoints. One public type per file.
 
-Audit/request logging uses **GlobalPre + GlobalPost** processors — not middleware. `Middleware/SampleMiddleware` is a no-op stub showing where non-FE ASP.NET middleware would go. Audit logs a **deterministic hash** of the user id via `IHashProvider` (never the raw id).
+Audit/request logging uses **GlobalPre + GlobalPost** processors — not middleware. `Middleware/SampleMiddleware` is a no-op stub showing where non-FE ASP.NET middleware would go. Audit logs a **deterministic hash** of the user id via `IHashProvider` (never the raw id). `IUserProvider.GetCurrentUserId()` reads `ClaimTypes.NameIdentifier` then `Identity.Name`, and returns `"anonymous"` when neither is present.
 
 ## Layout rules
 
@@ -70,7 +86,7 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - Unknown related id on create or get (e.g. `VesselId`) → handler returns `Error.NotFound`; endpoint maps to a **404** ProblemDetails.
 - **API versioning** uses the FastEndpoints **release group** strategy (see below). Every route is served under `/v{n}` and every endpoint calls `Version(n)` in `Configure()` (enforced by ArchitectureTests).
 - Feature Request/Response/DTOs/Commands/Queries are **`sealed record`** with primary constructors; Settings POCOs are **`sealed record`** with `init` properties.
-- Aggregates use private setters + factories (EF-friendly), while child entity construction stays behind its aggregate root.
+- Aggregates use private setters + factories (EF-friendly), while child entity construction stays behind its aggregate root. Entity ids are assigned by Postgres (`uuidv7()`); domain factories do not set `Id`.
 
 ## API versioning
 
@@ -100,7 +116,7 @@ To add a version of an existing use case:
 - `Api.UnitTests` — feature validators (and other Api-only unit tests). Feature tests follow `Features/{BC}/{UseCase}/V{n}/`.
 - `Domain.UnitTests` — domain unit tests (`Vessel.Create`, `ImoNumber`, …)
 - `Infrastructure.UnitTests` — providers (`UserProvider`, `HashProvider`)
-- `Api.IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers Postgres; Docker required). Feature tests follow `Features/{BC}/{UseCase}/V{n}/`; a test that compares two versions of one use case sits at the use-case folder (example: `Features/Vessels/GetVessel/GetVesselVersionTests.cs`).
+- `Api.IntegrationTests` — HTTP via `WebApplicationFactory` against the **same** database provider as the app (this sample: Npgsql + Testcontainers `postgres:18-alpine`; Docker required). Tests do **not** go through AppHost. Feature tests follow `Features/{BC}/{UseCase}/V{n}/`; a test that compares two versions of one use case sits at the use-case folder (example: `Features/Vessels/GetVessel/GetVesselVersionTests.cs`).
 - `ArchitectureTests` — NetArchTest boundary rules across Api, Domain, and Infrastructure (solution-wide; not prefixed with `Api.`). Split by concern: `LayerTests`, `FeatureTests`, `BoundedContextTests`, `PersistenceTests` (allowed BCs listed in `TestAssemblies`).
 
 Do not swap a different database engine into IntegrationTests for convenience.
@@ -113,4 +129,6 @@ dotnet build Ceataec.ExampleService.sln
 dotnet test Ceataec.ExampleService.sln
 ```
 
-IntegrationTests require Docker (Testcontainers Postgres).
+Local run: set AppHost as the startup project (F5) or `dotnet run --project src/Ceataec.ExampleService.AppHost` (Docker required for Postgres).
+
+IntegrationTests require Docker (Testcontainers Postgres) and stay independent of AppHost.

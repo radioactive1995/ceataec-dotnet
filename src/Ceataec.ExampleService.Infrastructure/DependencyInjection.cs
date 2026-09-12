@@ -18,13 +18,17 @@ public static class DependencyInjection
         services
             .AddOptions<DatabaseSettings>()
             .Bind(configuration.GetSection(DatabaseSettings.SectionName))
-            .ValidateDataAnnotations()
+            .Validate(
+                settings => !string.IsNullOrWhiteSpace(configuration.GetConnectionString("ceataec"))
+                    || !string.IsNullOrWhiteSpace(settings.ConnectionString),
+                "A database connection string is required. Set ConnectionStrings:ceataec or Database:ConnectionString.")
             .ValidateOnStart();
 
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
-            var database = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseSettings>>().Value;
-            options.UseNpgsql(database.ConnectionString);
+            var connectionString = configuration.GetConnectionString("ceataec")
+                ?? sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseSettings>>().Value.ConnectionString;
+            options.UseNpgsql(connectionString);
         });
         services.AddScoped<ICommandDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 

@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.5.3" />
     <PackageReference Include="ErrorOr" Version="2.1.1" />
     <PackageReference Include="FastEndpoints" Version="8.2.0" />
     <PackageReference Include="FastEndpoints.Swagger" Version="8.2.0" />
@@ -20,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ceataec.ExampleService.Domain\Ceataec.ExampleService.Domain.csproj" />
     <ProjectReference Include="..\Ceataec.ExampleService.Infrastructure\Ceataec.ExampleService.Infrastructure.csproj" />
+    <ProjectReference Include="..\Ceataec.ExampleService.ServiceDefaults\Ceataec.ExampleService.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
