@@ -1,3 +1,5 @@
+using ErrorOr;
+
 namespace Ceataec.ExampleService.Domain.Certificates;
 
 public sealed class Certificate : AggregateRoot
@@ -12,29 +14,29 @@ public sealed class Certificate : AggregateRoot
     public string Type { get; private set; } = string.Empty;
     public DateTimeOffset IssuedOn { get; private set; }
 
-    public static Certificate Create(Guid vesselId, string type, DateTimeOffset issuedOn)
+    public static ErrorOr<Certificate> Create(Guid vesselId, string type, DateTimeOffset issuedOn)
     {
         if (vesselId == Guid.Empty)
         {
-            throw new DomainException("Vessel id is required.", "vessel_id_required");
+            return Error.Validation("vessel_id_required", "Vessel id is required.");
         }
 
         if (string.IsNullOrWhiteSpace(type))
         {
-            throw new DomainException("Certificate type is required.", "certificate_type_required");
+            return Error.Validation("certificate_type_required", "Certificate type is required.");
         }
 
         var trimmedType = type.Trim();
         if (trimmedType.Length > TypeMaxLength)
         {
-            throw new DomainException(
-                $"Certificate type must be at most {TypeMaxLength} characters.",
-                "certificate_type_too_long");
+            return Error.Validation(
+                "certificate_type_too_long",
+                $"Certificate type must be at most {TypeMaxLength} characters.");
         }
 
         if (issuedOn == default)
         {
-            throw new DomainException("Issue date is required.", "certificate_issue_date_required");
+            return Error.Validation("certificate_issue_date_required", "Issue date is required.");
         }
 
         return new Certificate

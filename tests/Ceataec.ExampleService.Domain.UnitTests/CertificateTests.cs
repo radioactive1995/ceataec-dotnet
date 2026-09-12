@@ -1,4 +1,3 @@
-using Ceataec.ExampleService.Domain;
 using Ceataec.ExampleService.Domain.Certificates;
 
 namespace Ceataec.ExampleService.Domain.UnitTests;
@@ -13,27 +12,28 @@ public sealed class CertificateTests
 
         var certificate = Certificate.Create(vesselId, "  Safety  ", issuedOn);
 
-        Assert.Equal(Guid.Empty, certificate.Id);
-        Assert.Equal(vesselId, certificate.VesselId);
-        Assert.Equal("Safety", certificate.Type);
-        Assert.Equal(issuedOn, certificate.IssuedOn);
+        Assert.False(certificate.IsError);
+        Assert.Equal(Guid.Empty, certificate.Value.Id);
+        Assert.Equal(vesselId, certificate.Value.VesselId);
+        Assert.Equal("Safety", certificate.Value.Type);
+        Assert.Equal(issuedOn, certificate.Value.IssuedOn);
     }
 
     [Fact]
     public void Create_rejects_missing_vessel()
     {
-        var ex = Assert.Throws<DomainException>(
-            () => Certificate.Create(Guid.Empty, "Safety", DateTimeOffset.UtcNow));
+        var result = Certificate.Create(Guid.Empty, "Safety", DateTimeOffset.UtcNow);
 
-        Assert.Equal("vessel_id_required", ex.Code);
+        Assert.True(result.IsError);
+        Assert.Equal("vessel_id_required", result.FirstError.Code);
     }
 
     [Fact]
     public void Create_rejects_missing_type()
     {
-        var ex = Assert.Throws<DomainException>(
-            () => Certificate.Create(Guid.NewGuid(), " ", DateTimeOffset.UtcNow));
+        var result = Certificate.Create(Guid.NewGuid(), " ", DateTimeOffset.UtcNow);
 
-        Assert.Equal("certificate_type_required", ex.Code);
+        Assert.True(result.IsError);
+        Assert.Equal("certificate_type_required", result.FirstError.Code);
     }
 }

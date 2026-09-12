@@ -1,3 +1,5 @@
+using ErrorOr;
+
 namespace Ceataec.ExampleService.Domain.Vessels.ValueObjects;
 
 public readonly record struct ImoNumber
@@ -8,19 +10,19 @@ public readonly record struct ImoNumber
 
     private ImoNumber(string value) => Value = value;
 
-    public static ImoNumber Create(string value)
+    public static ErrorOr<ImoNumber> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("IMO number is required.", "imo_number_required");
+            return Error.Validation("imo_number_required", "IMO number is required.");
         }
 
         var trimmed = value.Trim();
         if (trimmed.Length > MaxLength)
         {
-            throw new DomainException(
-                $"IMO number must be at most {MaxLength} characters.",
-                "imo_number_too_long");
+            return Error.Validation(
+                "imo_number_too_long",
+                $"IMO number must be at most {MaxLength} characters.");
         }
 
         return new ImoNumber(trimmed);

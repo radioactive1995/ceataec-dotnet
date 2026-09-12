@@ -1,3 +1,4 @@
+using ErrorOr;
 using FastEndpoints;
 
 namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage.V1;
@@ -5,4 +6,4 @@ namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage.V1;
 public sealed record CreateVoyageCommand(
     Guid VesselId,
     string Destination,
-    DateTimeOffset DepartureAt) : ICommand<CreateVoyageResponse?>;
+    DateTimeOffset DepartureAt) : ICommand<ErrorOr<CreateVoyageResponse>>;

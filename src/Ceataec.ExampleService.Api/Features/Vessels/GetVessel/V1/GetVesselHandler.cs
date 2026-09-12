@@ -1,13 +1,14 @@
 using Ceataec.ExampleService.Cqrs;
 using Ceataec.ExampleService.Infrastructure.Persistence;
 using Ceataec.ExampleService.Infrastructure.Persistence.Vessels.Queries;
+using ErrorOr;
 
 namespace Ceataec.ExampleService.Features.Vessels.GetVessel.V1;
 
 public sealed class GetVesselHandler(AppDbContext dbContext)
-    : IQueryHandler<GetVesselQuery, GetVesselResponse?>
+    : IQueryHandler<GetVesselQuery, ErrorOr<GetVesselResponse>>
 {
-    public async Task<GetVesselResponse?> ExecuteAsync(
+    public async Task<ErrorOr<GetVesselResponse>> ExecuteAsync(
         GetVesselQuery query,
         CancellationToken ct)
     {
@@ -15,7 +16,7 @@ public sealed class GetVesselHandler(AppDbContext dbContext)
 
         if (vessel is null)
         {
-            return null;
+            return Error.NotFound("vessel_not_found", "Vessel was not found.");
         }
 
         return new GetVesselResponse(

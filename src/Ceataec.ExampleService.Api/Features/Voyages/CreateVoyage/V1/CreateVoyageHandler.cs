@@ -1,6 +1,7 @@
 using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Domain.Voyages;
 using Ceataec.ExampleService.Infrastructure.Persistence;
+using ErrorOr;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,9 +10,9 @@ namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage.V1;
 public sealed class CreateVoyageHandler(
     ICommandDbContext dbContext,
     ILogger<CreateVoyageHandler> logger)
-    : ICommandHandler<CreateVoyageCommand, CreateVoyageResponse?>
+    : ICommandHandler<CreateVoyageCommand, ErrorOr<CreateVoyageResponse>>
 {
-    public async Task<CreateVoyageResponse?> ExecuteAsync(
+    public async Task<ErrorOr<CreateVoyageResponse>> ExecuteAsync(
         CreateVoyageCommand command,
         CancellationToken ct)
     {
@@ -21,7 +22,7 @@ public sealed class CreateVoyageHandler(
         if (!vesselExists)
         {
             logger.LogWarning("Rejected voyage for unknown vessel {VesselId}", command.VesselId);
-            return null;
+            return Error.NotFound("vessel_not_found", "Vessel was not found.");
         }
 
         var voyage = Voyage.Create(
@@ -29,13 +30,18 @@ public sealed class CreateVoyageHandler(
             command.Destination,
             command.DepartureAt);
 
-        dbContext.Set<Voyage>().Add(voyage);
+        if (voyage.IsError)
+        {
+            return voyage.Errors;
+        }
+
+        dbContext.Set<Voyage>().Add(voyage.Value);
         await dbContext.SaveChangesAsync(ct);
 
         return new CreateVoyageResponse(
-            voyage.Id,
-            voyage.VesselId,
-            voyage.Destination,
-            voyage.DepartureAt);
+            voyage.Value.Id,
+            voyage.Value.VesselId,
+            voyage.Value.Destination,
+            voyage.Value.DepartureAt);
     }
 }

@@ -1,4 +1,3 @@
-using Ceataec.ExampleService.Domain;
 using Ceataec.ExampleService.Domain.Vessels.ValueObjects;
 
 namespace Ceataec.ExampleService.Domain.UnitTests.Vessels;
@@ -10,7 +9,8 @@ public sealed class ImoNumberTests
     {
         var imo = ImoNumber.Create("  IMO1234567  ");
 
-        Assert.Equal("IMO1234567", imo.Value);
+        Assert.False(imo.IsError);
+        Assert.Equal("IMO1234567", imo.Value.Value);
     }
 
     [Theory]
@@ -19,9 +19,10 @@ public sealed class ImoNumberTests
     [InlineData("   ")]
     public void Create_rejects_missing_value(string? value)
     {
-        var ex = Assert.Throws<DomainException>(() => ImoNumber.Create(value!));
+        var result = ImoNumber.Create(value!);
 
-        Assert.Equal("imo_number_required", ex.Code);
+        Assert.True(result.IsError);
+        Assert.Equal("imo_number_required", result.FirstError.Code);
     }
 
     [Fact]
@@ -29,9 +30,10 @@ public sealed class ImoNumberTests
     {
         var value = new string('X', ImoNumber.MaxLength + 1);
 
-        var ex = Assert.Throws<DomainException>(() => ImoNumber.Create(value));
+        var result = ImoNumber.Create(value);
 
-        Assert.Equal("imo_number_too_long", ex.Code);
+        Assert.True(result.IsError);
+        Assert.Equal("imo_number_too_long", result.FirstError.Code);
     }
 
     [Fact]

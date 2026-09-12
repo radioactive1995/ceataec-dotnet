@@ -1,5 +1,6 @@
 using Ceataec.ExampleService.Api.Middleware;
 using Ceataec.ExampleService.Api.Processors;
+using Ceataec.ExampleService.Http;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 
@@ -13,7 +14,12 @@ public static class WebApplicationExtensions
         app.UseMiddleware<SampleMiddleware>();
         app.UseFastEndpoints(c =>
         {
-            c.Errors.UseProblemDetails();
+            c.Errors.UseProblemDetails(x =>
+            {
+                x.ResponseBuilder = (failures, ctx, statusCode)
+                    => ProblemDetailsMapper.FromValidationFailures(failures, statusCode, ctx);
+            });
+            c.Errors.ProducesMetadataType = typeof(Microsoft.AspNetCore.Mvc.ProblemDetails);
             c.Versioning.Prefix = "v";
             c.Versioning.DefaultVersion = 1;
             c.Versioning.PrependToRoute = true;

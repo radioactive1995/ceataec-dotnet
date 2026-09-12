@@ -1,6 +1,7 @@
 using Ceataec.ExampleService.Domain.Certificates;
 using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Infrastructure.Persistence;
+using ErrorOr;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,9 +10,9 @@ namespace Ceataec.ExampleService.Features.Certificates.CreateCertificate.V1;
 public sealed class CreateCertificateHandler(
     ICommandDbContext dbContext,
     ILogger<CreateCertificateHandler> logger)
-    : ICommandHandler<CreateCertificateCommand, CreateCertificateResponse?>
+    : ICommandHandler<CreateCertificateCommand, ErrorOr<CreateCertificateResponse>>
 {
-    public async Task<CreateCertificateResponse?> ExecuteAsync(
+    public async Task<ErrorOr<CreateCertificateResponse>> ExecuteAsync(
         CreateCertificateCommand command,
         CancellationToken ct)
     {
@@ -21,7 +22,7 @@ public sealed class CreateCertificateHandler(
         if (!vesselExists)
         {
             logger.LogWarning("Rejected certificate for unknown vessel {VesselId}", command.VesselId);
-            return null;
+            return Error.NotFound("vessel_not_found", "Vessel was not found.");
         }
 
         var certificate = Certificate.Create(
@@ -29,13 +30,18 @@ public sealed class CreateCertificateHandler(
             command.Type,
             command.IssuedOn);
 
-        dbContext.Set<Certificate>().Add(certificate);
+        if (certificate.IsError)
+        {
+            return certificate.Errors;
+        }
+
+        dbContext.Set<Certificate>().Add(certificate.Value);
         await dbContext.SaveChangesAsync(ct);
 
         return new CreateCertificateResponse(
-            certificate.Id,
-            certificate.VesselId,
-            certificate.Type,
-            certificate.IssuedOn);
+            certificate.Value.Id,
+            certificate.Value.VesselId,
+            certificate.Value.Type,
+            certificate.Value.IssuedOn);
     }
 }

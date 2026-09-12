@@ -13,7 +13,7 @@ Target: **.NET 10** (`net10.0`), multi-project solution (Api + Domain + Infrastr
 ## Main patterns
 
 - **Vertical Slice Architecture** — HTTP use cases live as feature folders under `Features/{BC}/{UseCase}/V{n}/` in the Api host. Each version folder owns the REPR types for that contract. Domain entities and persistence live in separate class libraries grouped by bounded context — Features do **not** contain `Domain/`, `Persistence/`, or `Infrastructure/` subfolders.
-- **REPR (Request–Endpoint–Response)** — each HTTP use case is a Request, an Endpoint, and a Response (plus Validator / `Summary<TEndpoint>` on commands). Handlers return `TypedResults` from `ExecuteAsync` instead of building `ProblemDetails` in the feature.
+- **REPR (Request–Endpoint–Response)** — each HTTP use case is a Request, an Endpoint, and a Response (plus Validator / `Summary<TEndpoint>` on commands). Endpoints return `TypedResults` from `ExecuteAsync` instead of building `ProblemDetails` in the feature.
 - **FastEndpoints command bus** — use cases own a `Command` (`ICommand` / `ICommandHandler`) or `Query` (`IQuery` / `IQueryHandler`). `IQuery` markers extend FE `ICommand` so both dispatch via `.ExecuteAsync()`. Endpoints map HTTP → command/query and map results to `TypedResults`. Handlers orchestrate application flow; Domain types own business invariants. Command handlers use `ICommandDbContext` for aggregate-root access, while query handlers delegate unrestricted no-tracking reads to `IDbQuery` implementations through `AppDbContext`.
 
 ## What this is not
@@ -45,7 +45,7 @@ app.Run();
 | Project | Owns |
 |---|---|
 | `Ceataec.ExampleService.Api` | HTTP host: `Program`, pipeline (`DependencyInjection`, `WebApplicationExtensions`, `Middleware/`, `Processors/`, `ExceptionHandling/`), `Features/`, `Cqrs/` |
-| `Ceataec.ExampleService.Domain` | Domain by BC (`Vessels`, `Voyages`, `Certificates`): aggregates/entities/VOs — no package or project refs to Infra/Api |
+| `Ceataec.ExampleService.Domain` | Domain by BC (`Vessels`, `Voyages`, `Certificates`): aggregates/entities/VOs — ErrorOr for results; no project refs to Infra/Api |
 | `Ceataec.ExampleService.Infrastructure` | `Settings/`, providers (`IUserProvider`, `IHashProvider`), `Persistence/` (`AppDbContext`, EF configs), `AddInfrastructure` — references Domain |
 
 **References:** Infrastructure → Domain; Api → Domain + Infrastructure.
@@ -61,12 +61,12 @@ Audit/request logging uses **GlobalPre + GlobalPost** processors — not middlew
 - **Voyage** / **Certificate** store **`VesselId` only** — no cross-BC SQL FK. Existence is checked in the command handler via `ICommandDbContext.Set<Vessel>()`.
 - **Endpoints** never inject persistence contexts; they dispatch commands/queries. **Command handlers** inject `ICommandDbContext`, whose generic `Set<TAggregateRoot>()` constraint exposes only aggregate roots for direct reads and writes.
 - No repository layer. **Named read queries** under `Infrastructure/Persistence/{BC}/Queries/` implement `IDbQuery<TInput, TResult>` with `static abstract QueryAsync`. They receive the concrete `AppDbContext`, may query any mapped type or projection, and may return any `TResult`; always call **`AsNoTracking()`** (enforced by ArchitectureTests). The Feature maps the result to an HTTP `*Response` (example: `GetVesselWithTanks` → `Vessel` → `GetVesselResponse`).
-- **DDD:** Shared `Entity` / `AggregateRoot` (Id equality). Per BC: aggregate root at folder root (`Vessels/Vessel.cs`); child types under `Entities/` and `ValueObjects/` with matching namespaces (`...Vessels.Entities`, `...Vessels.ValueObjects`). Example: `Vessel` owns `Tank` creation through `AddTank` and uses the `ImoNumber` value object. Invariant failures throw `DomainException` → **400**.
+- **DDD:** Shared `Entity` / `AggregateRoot` (Id equality). Per BC: aggregate root at folder root (`Vessels/Vessel.cs`); child types under `Entities/` and `ValueObjects/` with matching namespaces (`...Vessels.Entities`, `...Vessels.ValueObjects`). Example: `Vessel` owns `Tank` creation through `AddTank` and uses the `ImoNumber` value object. Domain factories and handlers return `ErrorOr<T>`. Endpoints map failures to **ProblemDetails**: the first error’s type selects the status (400 / 404 / 409 / …) and every error is listed under `errors` as `{ code, description }`. FluentValidation request 400s use the same document (property name as `code`).
 - Domain factories own invariants and normalization; request validators repeat basic checks only for fast client feedback. Add richer behavior when a use case needs it rather than introducing DDD abstractions preemptively.
-- Endpoints use **Union-Type Returning Handlers**: override `ExecuteAsync` and return `TypedResults` (`Created` / `Ok` / `NotFound`). Do not build `ProblemDetails` in the handler — enable `c.Errors.UseProblemDetails()` in `UseApi()`.
+- Endpoints use **Union-Type Returning Handlers**: override `ExecuteAsync` and return `TypedResults` (`Created` / `Ok` / `Problem`). Do not build `ProblemDetails` in the handler — enable `c.Errors.UseProblemDetails()` in `UseApi()`.
 - Command features (writes): Endpoint + Request + Response + Validator + `Summary<TEndpoint>` + Command + Handler (`ICommand` / `ICommandHandler`).
 - Query features (reads): Endpoint + Response + Summary + Query + Handler (`IQuery` / `IQueryHandler`). GetVessel uses named query `Persistence/Vessels/Queries/GetVesselWithTanks`, shared by both of its endpoint versions.
-- Unknown related id on create (e.g. `VesselId`) → handler returns `null`; endpoint maps to `TypedResults.NotFound()`.
+- Unknown related id on create or get (e.g. `VesselId`) → handler returns `Error.NotFound`; endpoint maps to a **404** ProblemDetails.
 - **API versioning** uses the FastEndpoints **release group** strategy (see below). Every route is served under `/v{n}` and every endpoint calls `Version(n)` in `Configure()` (enforced by ArchitectureTests).
 - Feature Request/Response/DTOs/Commands/Queries are **`sealed record`** with primary constructors; Settings POCOs are **`sealed record`** with `init` properties.
 - Aggregates use private setters + factories (EF-friendly), while child entity construction stays behind its aggregate root.

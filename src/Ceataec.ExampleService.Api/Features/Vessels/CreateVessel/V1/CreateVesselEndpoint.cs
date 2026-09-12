@@ -1,10 +1,11 @@
+using Ceataec.ExampleService.Http;
 using FastEndpoints;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Ceataec.ExampleService.Features.Vessels.CreateVessel.V1;
 
 public sealed class CreateVesselEndpoint
-    : Endpoint<CreateVesselRequest, Created<CreateVesselResponse>>
+    : Endpoint<CreateVesselRequest, Results<Created<CreateVesselResponse>, ProblemHttpResult>>
 {
     public override void Configure()
     {
@@ -13,13 +14,15 @@ public sealed class CreateVesselEndpoint
         AllowAnonymous();
     }
 
-    public override async Task<Created<CreateVesselResponse>> ExecuteAsync(
+    public override async Task<Results<Created<CreateVesselResponse>, ProblemHttpResult>> ExecuteAsync(
         CreateVesselRequest req,
         CancellationToken ct)
     {
-        var response = await new CreateVesselCommand(req.Name, req.ImoNumber)
+        var result = await new CreateVesselCommand(req.Name, req.ImoNumber)
             .ExecuteAsync(ct);
 
-        return TypedResults.Created($"/v1/vessels/{response.Id}", response);
+        return result.Match<Results<Created<CreateVesselResponse>, ProblemHttpResult>>(
+            response => TypedResults.Created($"/v1/vessels/{response.Id}", response),
+            errors => errors.ToProblem());
     }
 }

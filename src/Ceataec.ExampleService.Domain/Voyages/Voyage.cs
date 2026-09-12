@@ -1,3 +1,5 @@
+using ErrorOr;
+
 namespace Ceataec.ExampleService.Domain.Voyages;
 
 public sealed class Voyage : AggregateRoot
@@ -12,29 +14,29 @@ public sealed class Voyage : AggregateRoot
     public string Destination { get; private set; } = string.Empty;
     public DateTimeOffset DepartureAt { get; private set; }
 
-    public static Voyage Create(Guid vesselId, string destination, DateTimeOffset departureAt)
+    public static ErrorOr<Voyage> Create(Guid vesselId, string destination, DateTimeOffset departureAt)
     {
         if (vesselId == Guid.Empty)
         {
-            throw new DomainException("Vessel id is required.", "vessel_id_required");
+            return Error.Validation("vessel_id_required", "Vessel id is required.");
         }
 
         if (string.IsNullOrWhiteSpace(destination))
         {
-            throw new DomainException("Destination is required.", "voyage_destination_required");
+            return Error.Validation("voyage_destination_required", "Destination is required.");
         }
 
         var trimmedDestination = destination.Trim();
         if (trimmedDestination.Length > DestinationMaxLength)
         {
-            throw new DomainException(
-                $"Destination must be at most {DestinationMaxLength} characters.",
-                "voyage_destination_too_long");
+            return Error.Validation(
+                "voyage_destination_too_long",
+                $"Destination must be at most {DestinationMaxLength} characters.");
         }
 
         if (departureAt == default)
         {
-            throw new DomainException("Departure time is required.", "voyage_departure_required");
+            return Error.Validation("voyage_departure_required", "Departure time is required.");
         }
 
         return new Voyage
