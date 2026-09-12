@@ -38,6 +38,23 @@ public sealed class FeatureTests
     }
 
     [Fact]
+    public void Command_handlers_do_not_reference_AppDbContext()
+    {
+        var failing = Types.InAssembly(TestAssemblies.Api)
+            .That()
+            .ResideInNamespaceStartingWith("Ceataec.ExampleService.Features")
+            .GetTypes()
+            .Where(TestAssemblies.IsCommandHandler)
+            .Where(TestAssemblies.DependsOnAppDbContext)
+            .Select(t => t.FullName)
+            .ToList();
+
+        Assert.True(
+            failing.Count == 0,
+            "Command handlers must use ICommandDbContext: " + string.Join(", ", failing));
+    }
+
+    [Fact]
     public void Api_pipeline_does_not_contain_endpoints()
     {
         var endpointTypes = Types.InAssembly(TestAssemblies.Api)

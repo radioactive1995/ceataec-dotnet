@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Features.Vessels.CreateVessel;
 using Ceataec.ExampleService.Features.Vessels.GetVessel;
 using Ceataec.ExampleService.Infrastructure.Persistence;
@@ -27,8 +28,8 @@ public sealed class CreateVesselTests(ExampleWebApplicationFactory factory)
 
         using (var scope = factory.Services.CreateScope())
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var storedVessel = await db.Vessels.SingleAsync(v => v.Id == created.Id);
+            var db = scope.ServiceProvider.GetRequiredService<ICommandDbContext>();
+            var storedVessel = await db.Set<Vessel>().SingleAsync(v => v.Id == created.Id);
             storedVessel.AddTank("Cargo 1", 1250.50m);
             await db.SaveChangesAsync();
         }

@@ -9,7 +9,7 @@ public sealed class GetVesselWithTanks : IDbQuery<Guid, Vessel?>
         AppDbContext dbContext,
         Guid vesselId,
         CancellationToken cancellationToken)
-        => dbContext.Vessels
+        => dbContext.Set<Vessel>()
             .Include(v => v.Tanks)
             .AsNoTracking()
             .FirstOrDefaultAsync(v => v.Id == vesselId, cancellationToken);

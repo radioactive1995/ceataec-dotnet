@@ -1,4 +1,6 @@
+using Ceataec.ExampleService.Domain;
 using Ceataec.ExampleService.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using NetArchTest.Rules;
 
 namespace Ceataec.ExampleService.ArchitectureTests;
@@ -6,6 +8,20 @@ namespace Ceataec.ExampleService.ArchitectureTests;
 public sealed class PersistenceTests
 {
     private static readonly string PersistenceRoot = FindPersistenceRoot();
+
+    [Fact]
+    public void Aggregate_context_Set_is_constrained_to_aggregate_roots()
+    {
+        var setMethod = typeof(ICommandDbContext)
+            .GetMethods()
+            .Single(m => m.Name == nameof(ICommandDbContext.Set));
+        var aggregateType = Assert.Single(setMethod.GetGenericArguments());
+
+        Assert.Contains(typeof(AggregateRoot), aggregateType.GetGenericParameterConstraints());
+        Assert.True(setMethod.ReturnType.IsGenericType);
+        Assert.Equal(typeof(DbSet<>), setMethod.ReturnType.GetGenericTypeDefinition());
+        Assert.Same(aggregateType, Assert.Single(setMethod.ReturnType.GetGenericArguments()));
+    }
 
     [Fact]
     public void Persistence_query_types_implement_IDbQuery()

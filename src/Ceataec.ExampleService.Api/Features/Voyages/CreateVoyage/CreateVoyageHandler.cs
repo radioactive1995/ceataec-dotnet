@@ -1,3 +1,4 @@
+using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Domain.Voyages;
 using Ceataec.ExampleService.Infrastructure.Persistence;
 using FastEndpoints;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Ceataec.ExampleService.Features.Voyages.CreateVoyage;
 
 public sealed class CreateVoyageHandler(
-    AppDbContext dbContext,
+    ICommandDbContext dbContext,
     ILogger<CreateVoyageHandler> logger)
     : ICommandHandler<CreateVoyageCommand, CreateVoyageResponse?>
 {
@@ -14,7 +15,7 @@ public sealed class CreateVoyageHandler(
         CreateVoyageCommand command,
         CancellationToken ct)
     {
-        var vesselExists = await dbContext.Vessels
+        var vesselExists = await dbContext.Set<Vessel>()
             .AnyAsync(v => v.Id == command.VesselId, ct);
 
         if (!vesselExists)
@@ -28,7 +29,7 @@ public sealed class CreateVoyageHandler(
             command.Destination,
             command.DepartureAt);
 
-        dbContext.Voyages.Add(voyage);
+        dbContext.Set<Voyage>().Add(voyage);
         await dbContext.SaveChangesAsync(ct);
 
         return new CreateVoyageResponse(

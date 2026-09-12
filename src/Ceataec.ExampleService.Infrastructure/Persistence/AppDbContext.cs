@@ -1,15 +1,13 @@
-using Ceataec.ExampleService.Domain.Certificates;
-using Ceataec.ExampleService.Domain.Vessels;
-using Ceataec.ExampleService.Domain.Voyages;
+using Ceataec.ExampleService.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ceataec.ExampleService.Infrastructure.Persistence;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
+    : DbContext(options), ICommandDbContext
 {
-    public DbSet<Vessel> Vessels => Set<Vessel>();
-    public DbSet<Voyage> Voyages => Set<Voyage>();
-    public DbSet<Certificate> Certificates => Set<Certificate>();
+    DbSet<TAggregateRoot> ICommandDbContext.Set<TAggregateRoot>()
+        => Set<TAggregateRoot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

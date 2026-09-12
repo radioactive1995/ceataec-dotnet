@@ -1,4 +1,5 @@
 using Ceataec.ExampleService.Domain.Certificates;
+using Ceataec.ExampleService.Domain.Vessels;
 using Ceataec.ExampleService.Infrastructure.Persistence;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Ceataec.ExampleService.Features.Certificates.CreateCertificate;
 
 public sealed class CreateCertificateHandler(
-    AppDbContext dbContext,
+    ICommandDbContext dbContext,
     ILogger<CreateCertificateHandler> logger)
     : ICommandHandler<CreateCertificateCommand, CreateCertificateResponse?>
 {
@@ -14,7 +15,7 @@ public sealed class CreateCertificateHandler(
         CreateCertificateCommand command,
         CancellationToken ct)
     {
-        var vesselExists = await dbContext.Vessels
+        var vesselExists = await dbContext.Set<Vessel>()
             .AnyAsync(v => v.Id == command.VesselId, ct);
 
         if (!vesselExists)
@@ -28,7 +29,7 @@ public sealed class CreateCertificateHandler(
             command.Type,
             command.IssuedOn);
 
-        dbContext.Certificates.Add(certificate);
+        dbContext.Set<Certificate>().Add(certificate);
         await dbContext.SaveChangesAsync(ct);
 
         return new CreateCertificateResponse(

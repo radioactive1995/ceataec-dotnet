@@ -26,6 +26,7 @@ public static class DependencyInjection
             var database = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseSettings>>().Value;
             options.UseNpgsql(database.ConnectionString);
         });
+        services.AddScoped<ICommandDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         services.AddScoped<IUserProvider, UserProvider>();
         services.AddSingleton<IHashProvider, HashProvider>();

@@ -36,6 +36,15 @@ internal static class TestAssemblies
                 || i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)
                 || i.GetGenericTypeDefinition() == typeof(Ceataec.ExampleService.Cqrs.IQueryHandler<,>)));
 
+    public static bool IsCommandHandler(Type type)
+        => !ImplementsOpenGeneric(
+               type,
+               typeof(Ceataec.ExampleService.Cqrs.IQueryHandler<,>))
+           && type.GetInterfaces().Any(i =>
+               i.IsGenericType
+               && (i.GetGenericTypeDefinition() == typeof(ICommandHandler<>)
+                   || i.GetGenericTypeDefinition() == typeof(ICommandHandler<,>)));
+
     public static bool DependsOnAppDbContext(Type type)
     {
         if (type.GetConstructors().Any(c =>

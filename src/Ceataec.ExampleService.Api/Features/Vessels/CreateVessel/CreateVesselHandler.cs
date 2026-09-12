@@ -7,7 +7,7 @@ using FastEndpoints;
 namespace Ceataec.ExampleService.Features.Vessels.CreateVessel;
 
 public sealed class CreateVesselHandler(
-    AppDbContext dbContext,
+    ICommandDbContext dbContext,
     IUserProvider userProvider,
     ILogger<CreateVesselHandler> logger)
     : ICommandHandler<CreateVesselCommand, CreateVesselResponse>
@@ -22,7 +22,7 @@ public sealed class CreateVesselHandler(
             ImoNumber.Create(command.ImoNumber),
             createdBy);
 
-        dbContext.Vessels.Add(vessel);
+        dbContext.Set<Vessel>().Add(vessel);
         await dbContext.SaveChangesAsync(ct);
 
         logger.LogInformation(
