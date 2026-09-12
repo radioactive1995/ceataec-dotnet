@@ -1,49 +1,63 @@
-# Reference-template review for AI adoption
+# Template adoption goal and review
 
-Reviewed `radioactive1995/ceataec-dotnet` at
-`a702f800b28a0a9b86d83af5495de8d7552bcc2c`. Static review of the complete file inventory,
-README, project graph, representative write/read paths, composition, domain/persistence
-patterns and architecture/test setup. No .NET SDK was available; no C# execution or
-package-availability verification is claimed. This is not an exhaustive security audit.
+## Goal
 
-## Assessment
+A developer can connect an approved harness to this repository or a versioned
+plugin, understand the selected standard, and review, refactor, scaffold or verify
+a service without relying on another knowledge store. A review remains feedback
+only. Refactoring preserves contracts/data. Generation uses an immutable reference.
+Updates preserve local work, and verification distinguishes passed, failed, blocked
+and deliberately skipped checks.
 
-The reference has a useful, opinionated teaching structure: ten projects (five source,
-five test), small versioned feature slices, typed results, domain factories, explicit
-command/query persistence boundaries and real-engine integration tests. These are a
-strong basis for the three workflows. The canonical specification should capture the
-intent of these boundaries, not require every consumer to keep the sample domain.
+## Implemented in version 0.2.0
 
-The main adoption gap was the lack of distribution/workflow definitions. The README
-sent coding agents to a separately maintained Brain note. This change adds versioned
-rules, evidence-aware scoring, workflow skills, harness adapters and generation/setup
-helpers, and makes the Brain a link to the standard instead of an independent authority.
+- One specification and catalog, packaged for Cursor/Claude, with project attachment
+  for Claude, Cursor and Codex. Root AGENTS/CLAUDE instructions route template work.
+- REVIEW-SCORE, REFACTOR, SCAFFOLD and VERIFY skills. A read-only reviewer agent is
+  available for harnesses that enforce its restricted tool set.
+- Evidence-aware scoring with unknown/N/A treatment, coverage and separate template
+  and readiness subtotals. Scores are proposed decision aids, not release approval.
+- Committed-source generation with naming, optional Aspire, safe destination checks,
+  fresh user-secrets identity, empty credential defaults and reference provenance.
+- Explicit attachment upgrades check all managed-file hashes before writing, preserve
+  the previous snapshot and refuse locally edited instructions.
+- GitHub validation covers Python tooling, the reference and both generated C# variants.
+  No deployment pipeline is generated or deployed by this kit.
 
-## Findings in the pinned C# reference
+## Reference fixes
 
-| Priority / rule | Evidence | Impact and recommendation |
+Initial review examined `a702f800b28a0a9b86d83af5495de8d7552bcc2c`.
+Generation now pins the hardened reference `c8c786f65ab94e2004983a024bc98e757eeeb310`.
+
+| Finding | Change | Evidence added |
 | --- | --- | --- |
-| High — CFG-001 / TST-001 | `tests/...Api.IntegrationTests/ExampleWebApplicationFactory.cs:42` overrides only `Database:ConnectionString`; `src/...Infrastructure/DependencyInjection.cs:29-30` prefers `ConnectionStrings:ceataec`; the factory calls `Migrate()` at line 56 | An inherited preferred connection can cause tests/migrations to target a database other than their container. Override both keys or replace DbContext configuration explicitly. The generator now overrides both in generated starters; the pinned sample still needs the corresponding fix and an execution test. |
-| Medium — CFG-001 | `src/...Infrastructure/DependencyInjection.cs:21-30` validates nonblank values using OR, but selects using `??` | A present empty/whitespace preferred value can win over a valid fallback, while validation accepts the fallback. Resolve one effective nonblank value and validate/use that same value. Add cases for missing/empty/whitespace preferred values. High confidence from the code; runtime behavior was not exercised. |
-| Medium — TST-001 | `tests/...ArchitectureTests/FeatureTests.cs:33-34` searches for `Version(`; `PersistenceTests.IDbQuery_QueryAsync_uses_AsNoTracking` searches for `.AsNoTracking(` | A comment or unrelated call can satisfy the test without the intended behavior. Prefer endpoint metadata assertions and query behavior/semantic analysis. These tests are helpful hints but should not be treated as proof by a scoring agent. |
-| Medium — ARC-001 / TST-001 | `FeatureTests.Endpoints_do_not_reference_AppDbContext` and `TestAssemblies.DependsOnAppDbContext` check the concrete type | An endpoint injecting `ICommandDbContext` can still violate the stated no-persistence rule without this check catching it. Cover persistence interfaces/base types and actual dependency relationships. |
-| Readiness decision — SEC-001 | `src/...Api/Features/Vessels/CreateVessel/V1/CreateVesselEndpoint.cs:17` and other endpoints call `AllowAnonymous()` | Explicit teaching behavior, not a discovered production exposure. Consumer scaffolding must label this and require an intentional public/private access design before shipping. Do not guess a company identity provider. |
-| Readiness decision — OPS-001 | `src/...ServiceDefaults/Extensions.cs`, `MapDefaultEndpoints`, maps probes only in Development; Api `Program.cs` migrates only in Development | Production health/schema-deployment behavior needs a decision in provisioning. No requirement to add Terraform or Azure DevOps here, because the README assigns them to another seed. |
-| Low — MNT-001 | Both `src/...Api/Properties/launchSettings.json` and `src/...Api/Properties/Properties/launchSettings.json` are tracked | The nested duplicate is confusing and should be removed. The generator excludes it. |
-| Readiness decision — MNT-001 | No root `global.json`, local EF tool manifest or lock-file policy; versions live in individual `.csproj` files | Before a company release, decide SDK/dependency/update policy and verify package restore against approved feeds. Do not blindly change versions based on this static review. |
+| Blank preferred database connection could win over a valid fallback while validation passed | Validation and DbContext registration now share `DatabaseSettings.GetEffectiveConnectionString` | Infrastructure tests cover null/empty/whitespace preferred values, precedence and missing effective configuration |
+| Integration tests overrode only the fallback connection key | Test factory supplies both keys through the final application configuration and checks the selected connection before its explicit migration | Factory assertion plus isolated Testcontainers setup |
+| Endpoint persistence checks only covered concrete AppDbContext | Added a compiled dependency rule against the persistence namespace, including ICommandDbContext | Architecture test alongside the existing concrete-type checks |
+| Domain independence did not explicitly forbid EF Core | Added an EF Core dependency prohibition | Architecture test |
+| A source string was treated as evidence of no-tracking query behavior | Added a real-engine read test that loads an existing aggregate and checks ChangeTracker remains empty | HTTP-created data plus named query execution; the source-text guard remains supplementary |
+| Duplicate nested launch-settings file | Removed the tracked duplicate | Generated/reference layouts have one Api launch-settings path |
 
-All abbreviated paths above are rooted at `Ceataec.ExampleService` project names.
-Sample connection strings and deterministic user-id hashing also need explicit
-production treatment; neither is a safe company default merely because it exists here.
-The generator clears committed connection defaults, but preserves the example behavior.
+## Remaining acceptance boundaries
 
-## Suggested adoption order
+The authoring environment cannot start CoreCLR (HRESULT 0x8007000E), even with a
+local .NET 10 SDK, and provides no Docker or Cursor/Claude runtimes. Python tooling
+checks can run locally. Hosted validation results on the PR are the source of truth
+for C# execution; the workflow's existence alone is not a pass. Live harness discovery
+and a representative workflow request still need an approved client environment.
 
-1. Fix test-database isolation and effective-connection validation in the runnable
-   reference; execute the C# suite and pin a new approved reference commit.
-2. Validate both generated variants and the actual harness discovery/permissions.
-3. Pilot REVIEW-SCORE on an existing service; calibrate weights, exceptions and
-   evidence requirements with its owners before using scores as a gate.
-4. Migrate one use case with preserved contracts, then exercise new-service generation.
-5. Add native `dotnet new` packaging or additional profiles once the first matrix is
-   verified; publish a versioned company plugin and link the Brain conventions to it.
+The scaffold is a named teaching starter retaining the sample domain and tests.
+An empty or business-specific service is a coherent subsequent implementation task.
+Only HTTP APIs/Postgres are supported by this initial profile. AppHost is optional;
+production auth, probes and schema deployment remain explicit service decisions.
+The sample's anonymous endpoints and local credentials are not company requirements.
+Existing source-text version/no-tracking guards are supplementary, not semantic proof.
+
+## Pilot and release
+
+Pilot the versioned kit on an existing service and a new starter. Check review leaves
+all target files unchanged; check a refactored slice preserves API/DB contracts; run
+VERIFY with real integration tests. Calibrate scoring and exceptions with service
+owners before using scores as merge gates. Publish a company plugin version only after
+hosted checks and approved harness acceptance succeed. Add more profiles or native
+`dotnet new` packaging when a concrete consuming team needs them.

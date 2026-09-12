@@ -1,6 +1,6 @@
 # Scaffold choices
 
-| Choice | Release 0.1 behavior |
+| Choice | Release 0.2 behavior |
 | --- | --- |
 | Name/root namespace | Required PascalCase segments, e.g. `Ceataec.Orders`; used in project/file names, namespaces and Aspire generated project identifier |
 | Output | Required new directory; never merges into an existing project |
@@ -10,7 +10,7 @@
 | Tests | Keep all existing test projects, including architecture and real-engine integration tests |
 | Auth | Sample anonymous endpoints retained for teaching; production policy must be implemented before shipping |
 | CI/deploy | Supplied externally by company provisioning; no invented Terraform or Azure DevOps pipeline |
-| AI integration | Three local skills for the chosen harness; optional attachment after generation |
+| AI integration | Four local skills for the chosen harness; optional attachment after generation |
 
 The generator pins both the standard version and reference commit in
 `.ceataec-template.json`, assigns a new AppHost UserSecretsId, and renames the local

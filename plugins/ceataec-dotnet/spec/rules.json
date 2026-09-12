@@ -1,9 +1,9 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "status": "proposed",
   "profile": "http-api-postgres",
   "referenceRepository": "https://github.com/radioactive1995/ceataec-dotnet",
-  "referenceCommit": "a702f800b28a0a9b86d83af5495de8d7552bcc2c",
+  "referenceCommit": "c8c786f65ab94e2004983a024bc98e757eeeb310",
   "rules": [
     {"id":"ARC-001","weight":15,"kind":"template","title":"Project dependency boundaries","criterion":"Api, Domain and Infrastructure responsibilities and dependency direction follow standard.md; Domain has no HTTP/persistence dependency."},
     {"id":"SLI-001","weight":10,"kind":"template","title":"Versioned feature slices","criterion":"Use cases own their HTTP/CQRS contracts in versioned slices; endpoints delegate orchestration and avoid persistence access."},

@@ -31,6 +31,7 @@ the missing decision before that change; existing explicit authorization still a
 Honor accepted exceptions. Never weaken tests merely to improve the score.
 
 Run relevant build, unit, architecture and integration checks with available tools;
+use [VERIFY](../verify/SKILL.md) for execution and evidence reporting.
 integration tests require the target's real engine. Report unavailable dependencies
 and pre-existing failures separately. Stop a migration batch when it introduces a
 failure; repair or isolate that batch before proceeding. Never claim unrun checks pass.

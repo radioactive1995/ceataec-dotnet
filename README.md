@@ -22,15 +22,15 @@ Terraform and Azure DevOps pipelines are **not** here — they come from the `bu
 
 This is **not** modular architecture: there is no `Modules/` folder. Bounded contexts appear as subfolders under Domain, Features, and Infrastructure Persistence.
 
-## Relation to CEATAEC-AI-Brain
+## Canonical standard
 
-The versioned adoption standard now lives in [`plugins/ceataec-dotnet/spec/standard.md`](plugins/ceataec-dotnet/spec/standard.md). The Brain note (`vault/Brain/Preferences/dotnet-conventions.md`) should link to a released version of that standard; updating the external Brain note is a separate task. Review/refactor workflows can use the bundled plugin without cloning the C# reference. Scaffolding reads a pinned reference checkout.
+The versioned adoption standard lives in [`plugins/ceataec-dotnet/spec/standard.md`](plugins/ceataec-dotnet/spec/standard.md). This repository owns the architecture, examples, skills and scoring rules. Review/refactor workflows use the bundled specification; scaffolding reads its pinned reference checkout.
 
 ## AI adoption workflows (proposed)
 
-Use **REVIEW-SCORE** for feedback only, **REFACTOR** for staged alignment of an existing service, or **SCAFFOLD** for a newly named starter with optional Aspire orchestration. Cursor and Claude Code share the same specifications and skills. Project skill attachment also supports Codex.
+Use **REVIEW-SCORE** for feedback only, **REFACTOR** for staged alignment of an existing service, or **SCAFFOLD** for a newly named starter with optional Aspire orchestration. **VERIFY** executes build/test checks separately from feedback-only review. Cursor and Claude Code share the same specifications and skills. Project skill attachment also supports Codex.
 
-See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.1.0 is a draft kit; C# and live harness acceptance checks are still required. Scaffolding currently retains the teaching domain and tests.
+See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.2.0 is a draft kit; C# and live harness acceptance checks are still required. Scaffolding currently retains the teaching domain and tests.
 
 ## Composition
 

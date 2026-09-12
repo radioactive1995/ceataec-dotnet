@@ -11,6 +11,7 @@ For a requested adoption workflow, read the corresponding entry point:
 | REVIEW-SCORE: feedback only | `plugins/ceataec-dotnet/skills/review-score/SKILL.md` |
 | REFACTOR: align an existing service | `plugins/ceataec-dotnet/skills/refactor/SKILL.md` |
 | SCAFFOLD: create a new service | `plugins/ceataec-dotnet/skills/scaffold/SKILL.md` |
+| VERIFY: execute builds/tests | `plugins/ceataec-dotnet/skills/verify/SKILL.md` |
 
 Distinguish the **reference template** from the **target service**. Do not refactor
 the template when asked to review a target. A review never authorizes writes,

@@ -1,7 +1,7 @@
 # CEATAEC .NET adoption standard
 
-Version: **0.1.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
-commit `a702f800b28a0a9b86d83af5495de8d7552bcc2c`.
+Version: **0.2.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
+commit `c8c786f65ab94e2004983a024bc98e757eeeb310`.
 The machine-readable criteria and weights are in [rules.json](rules.json).
 Use this bundled version for a whole assessment; never silently compare against moving `main`.
 
@@ -94,5 +94,4 @@ is absent by design, with evidence; missing implementation is a failure, not N/A
 
 Change the standard, catalog, example code and relevant tests together. Bump the
 version for scoring/behavior changes and document migration impact. Updates in a
-consumer are explicit; never auto-upgrade its pinned baseline. The Brain note should
-link to a released version of this standard rather than become a competing rule source.
+consumer are explicit; never auto-upgrade its pinned baseline. This repository is the only maintained source of adoption rules.
