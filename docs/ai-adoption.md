@@ -1,8 +1,8 @@
 # Three simple workflows
 
-This kit is **version 0.4.0, proposed**. It contains three skills, one shared principles
-document and thin Claude/Cursor plugin manifests. No Python, custom generator, scoring
-engine, attachment manager or separate verification skill is required.
+This kit is **version 0.4.1, proposed**. It contains three skills, one shared principles
+document and thin Claude/Cursor plugin manifests. Optional shell installers make those same three skills available locally.
+No Python, custom generator, scoring engine or separate verification skill is required.
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
@@ -15,7 +15,47 @@ features and implementation choices in the example service illustrate the ideas;
 they are not a checklist for another project. Scaffolding starts with the requested
 purpose and leaves out teaching features unless requested.
 
-## Use with a harness
+## Install locally
+
+Run one of these from this checkout, without administrator privileges:
+
+```bash
+# macOS/Linux (Bash): choose cursor, claude, or both
+bash scripts/install-skills.sh both
+```
+
+```powershell
+# Windows PowerShell 5.1, or PowerShell 7 on Windows/macOS/Linux
+./scripts/install-skills.ps1 -Harness both
+```
+
+| Choice | Personal skill location |
+| --- | --- |
+| `cursor` | `~/.cursor/skills/ceataec-{review-score,refactor,scaffold}/` |
+| `claude` | `~/.claude/skills/ceataec-{review-score,refactor,scaffold}/` |
+| `both` | Same Claude location; Cursor also discovers it, so there is one copy |
+
+These are personal **skill installations**, available across local projects. They
+install the plugin's three skills without changing plugin settings or requiring a
+marketplace, harness CLI, symlinks or network access. Each skill gets its own bundled
+principles file with an adapted relative link, so moving the checkout does not break it.
+Scaffolding still needs a reference checkout for C# source.
+
+Use `--dry-run` (Bash) or `-DryRun` (PowerShell) to preview. `--user-home DIR` / `-UserHome DIR`
+selects another existing user directory for testing. Identical installations are a no-op;
+conflicting content or links stop installation before files are copied. To update,
+inspect/back up local edits, remove only the three installed `ceataec-*` skill folders,
+then rerun. Uninstall by removing those same folders. Don't remove the whole harness
+skills directory. Switching from Cursor-only to both requires removing the old
+Cursor copies first. Avoid loading a native plugin alongside these personal skills.
+
+Restart the client, then select `/ceataec-review-score`, `/ceataec-refactor` or
+`/ceataec-scaffold`. Confirm the three skills appear in the client's skill picker.
+Personal skills are local; this does not install them on remote/cloud agents.
+See the supported locations in [Cursor's skill documentation](https://cursor.com/docs/skills)
+and [Claude's skill documentation](https://code.claude.com/docs/en/skills).
+
+## Use without installation
 
 Keep a checkout of this repository outside the target, at a chosen commit. Any harness
 that can read files can follow the appropriate entry point:
@@ -58,14 +98,17 @@ assessment files. Scores are discussion aids and are not comparable to versions 
 
 ## Moving from the earlier kit
 
-The extra skills, Python helpers, reviewer agent and managed snapshots are retired.
+The extra skills, Python helpers, reviewer agent and versioned snapshot manager are retired.
+The new installers only copy three self-contained personal skills; they do not manage
+old project attachments or silently upgrade them.
 If a consumer has an older attachment, it will keep using those copied instructions
 until explicitly updated. Inspect its managed `ceataec-*` skill directories and
 `.ceataec/dotnet/<version>` snapshots; preserve local edits and remove only the old
-kit-owned files as a separate setup change. Then use the external checkout approach.
+kit-owned files as a separate setup change. Then use either the local installer or the external checkout approach.
 Updating this repository does not rewrite consumer repositories.
 
-This repository's CI restores, builds and tests the runnable .NET example directly.
+This repository's CI checks the installers in temporary user directories on Linux and
+Windows, and restores, builds and tests the runnable .NET example directly.
 It does not claim to validate arbitrary AI-generated projects; each scaffold must run
 its own checks. The removed Python tests covered the removed tools, not application
 behavior. The C# unit, architecture and integration tests remain.

@@ -11,8 +11,6 @@ internal static class TestAssemblies
     public static readonly System.Reflection.Assembly Domain = typeof(Vessel).Assembly;
     public static readonly System.Reflection.Assembly Infrastructure = typeof(AppDbContext).Assembly;
 
-    public static readonly string[] BoundedContexts = ["Vessels", "Voyages", "Certificates"];
-
     public static bool IsEndpoint(Type type)
         => type.BaseType is { IsGenericType: true } baseType
            && (baseType.GetGenericTypeDefinition() == typeof(Endpoint<,>)

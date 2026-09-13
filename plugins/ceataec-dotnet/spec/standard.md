@@ -1,6 +1,6 @@
 # Adoption principles
 
-Version **0.4.0 — proposed**. Use this guidance to understand and improve a project's
+Version **0.4.1 — proposed**. Use this guidance to understand and improve a project's
 structure, not to make every repository a copy of this one.
 
 ## What carries across
@@ -26,6 +26,21 @@ ideas. Never require, score, rename another domain into, or automatically scaffo
 The same applies to example providers, middleware, migrations and tests. Copy a pattern
 only when it serves the target's requirements. Don't copy sample access, credentials or
 logging choices as production defaults. A worker or library does not need HTTP layers.
+
+## Bounded context and aggregates
+
+A bounded context defines where a domain model and its language have consistent meaning.
+An aggregate is a consistency boundary inside that model, with a root controlling its
+entities and invariants. A bounded context can contain several aggregates; a folder,
+entity, aggregate, database table or service is not automatically a bounded context.
+
+This example treats Vessels, Voyages and Certificates as aggregates in one bounded
+context; Tank is a child entity in the Vessel aggregate. Their folders organize code.
+Identity-only references or omitted foreign keys between aggregates do not establish
+separate contexts. Choose referential integrity and concurrency behavior deliberately.
+Do not infer context boundaries, mandate one context per aggregate, or score folder
+separation as domain isolation. Split contexts when the target's language, model or
+ownership actually differs, not because the sample contains several aggregate roots.
 
 ## Simple review score
 
