@@ -1,31 +1,60 @@
-# Adoption principles
+# Skeleton baseline and adoption principles
 
-Version **0.4.1 — proposed**. Use this guidance to understand and improve a project's
-structure, not to make every repository a copy of this one.
+Version **0.5.0 — proposed**. The runnable .NET skeleton is the source of truth for
+structure and implementation decisions. All three workflows use that same baseline;
+this document explains how to apply it to another project's own domain.
 
-## What carries across
+## Establish the reference
 
-- Organize code around the project's own use cases. Keep related behavior easy to find.
-- Separate transport, business decisions and infrastructure responsibilities. Business
-  rules should not depend on HTTP or database implementation details.
-- Keep invariants where all relevant callers use them. A simple application can have
-  simple behavior; introduce aggregates, value objects or abstractions when they help.
-- Make reads, writes, failures and external side effects explicit. Keep persistence
-  concerns out of transport adapters and preserve API/data contracts as code evolves.
-- Test meaningful behavior and boundaries. Keep configuration, errors and local
-  verification understandable. Follow the target's formatting/analyzer conventions.
+Use [radioactive1995/ceataec-dotnet](https://github.com/radioactive1995/ceataec-dotnet).
+Use the user's selected revision or reference checkout's committed HEAD. Otherwise
+resolve main to a full commit once through authorized read-only repository access.
+Record that commit separately from the target revision and keep it fixed for the task.
+Inspect the reference code, project files and tests; bundled instructions alone are
+not evidence of the current implementation. Installed skills still need source access.
 
-The sample shows one implementation: vertical slices, Api/Domain/Infrastructure projects,
-FastEndpoints, ErrorOr, EF Core/Postgres, versioned HTTP endpoints and optional Aspire.
-Equivalent implementations are valid. Project names, folder counts, libraries, database,
-identifier generation, relationships and deployment setup are not adoption requirements.
-Use the target's existing decisions unless changing them is part of the task.
+If the source is unavailable, ask for a reference checkout/revision or authorized
+read-only access. Identify what cannot be assessed; do not invent baseline details or
+produce a conformance total. If code and documentation disagree, report the mismatch
+with both locations. A defect in the reference is a finding to resolve, not something
+to copy or silently turn into a requirement.
 
-Vessels, Voyages, Certificates, Tanks and their features (including streaming) illustrate
-ideas. Never require, score, rename another domain into, or automatically scaffold them.
-The same applies to example providers, middleware, migrations and tests. Copy a pattern
-only when it serves the target's requirements. Don't copy sample access, credentials or
-logging choices as production defaults. A worker or library does not need HTTP layers.
+## Follow these decisions
+
+For HTTP services, follow the skeleton's project boundaries, feature layout, libraries
+and patterns. Inspect the selected revision; these are the current starting points:
+
+| Decision | Reference evidence (paths relative to the reference checkout) |
+| --- | --- |
+| Api, Domain, Infrastructure and ServiceDefaults responsibilities; dependency direction; framework and library choices | `src/*/*.csproj`, `tests/Ceataec.ExampleService.ArchitectureTests/LayerTests.cs` |
+| Versioned vertical slices, Endpoint dispatch through FastEndpoints commands/queries, typed results and sealed record contracts | `src/Ceataec.ExampleService.Api/Features/`, `src/Ceataec.ExampleService.Api/Cqrs/` |
+| Domain-owned invariants and aggregate behavior, independent of HTTP/EF; ErrorOr results | `src/Ceataec.ExampleService.Domain/` |
+| Aggregate writes through ICommandDbContext; named IDbQuery reads using AppDbContext and no tracking; EF Core/Postgres | `src/Ceataec.ExampleService.Infrastructure/Persistence/` and the feature handlers |
+| Central ProblemDetails, versioning, configuration and service defaults | `src/Ceataec.ExampleService.Api/Http/`, Api composition, Infrastructure registration, ServiceDefaults |
+| Domain/Api/Infrastructure unit tests, architecture tests and real-engine HTTP integration tests | `tests/` and the solution file |
+
+A well-designed alternative can still diverge from this baseline. Explain deliberate
+exceptions and their reasons; don't silently award full alignment or substitute a
+preferred library/pattern. Framework/package-version differences need their compatibility
+impact explained; never downgrade a working dependency blindly for cosmetic parity.
+For a worker, library or another unsupported project type, identify the scope mismatch
+and agree the relevant adaptation. Don't invent a second profile or score missing HTTP
+layers as defects; omit a whole-template total when the profile does not apply.
+
+## Adapt these to the target
+
+Use the target's own language, aggregate names, entities, relationships and use cases.
+Vessels, Voyages, Certificates, Tanks and streaming are teaching examples, never required
+features. Rename projects for the new service while retaining the baseline responsibilities.
+Carry over reusable patterns and checks, not sample-specific assertions or schema.
+Simple business behavior need not acquire artificial aggregates or value objects.
+
+Aspire AppHost is optional local orchestration; omission is not an alignment gap.
+Retain applicable ServiceDefaults behavior and coherent dependency wiring. Authentication,
+credentials, identity providers, logging fields and production deployment need the target's
+actual requirements; sample anonymous access and local credentials are not defaults to copy.
+Refactoring preserves shipped contracts, data and migration history. A deliberate exception
+may remain necessary; list it rather than hiding it or breaking behavior to improve a score.
 
 ## Bounded context and aggregates
 
@@ -42,27 +71,31 @@ Do not infer context boundaries, mandate one context per aggregate, or score fol
 separation as domain isolation. Split contexts when the target's language, model or
 ownership actually differs, not because the sample contains several aggregate roots.
 
-## Simple review score
+## Simple alignment score
 
-Assess these five areas in the target's context, using code evidence:
+Assess five areas against the selected skeleton revision:
 
-| Area | Question |
+| Area | What to compare |
 | --- | --- |
-| Responsibilities | Are transport, business behavior and infrastructure sensibly separated? |
-| Use-case organization | Is related code easy to find and change without unrelated duplication? |
-| Business behavior | Are the project's actual rules enforced in appropriate, reusable places? |
-| External boundaries | Are persistence, contracts, configuration and failure handling deliberate? |
-| Verification | Do meaningful tests cover important behavior, with clear ways to run checks? |
+| Responsibilities | Project separation, dependency direction and framework choices |
+| Use-case organization | Versioned feature slices, HTTP adapters, command/query dispatch and contract shapes |
+| Business behavior | Domain-owned invariants, aggregate encapsulation and result handling, using the target's own model |
+| External boundaries | Persistence access patterns and libraries, API/error mapping, configuration and service defaults |
+| Verification | Test responsibilities, architecture coverage and real-engine integration approach for relevant behavior |
 
-For each: **0 = substantial gaps**, **1 = partly addressed**, **2 = well addressed**.
-Give one short explanation with a file/symbol reference. Add the five numbers for
-**a score out of 10**; no weights, percentages or automated calculator.
+For each: **0 = substantially diverges**, **1 = partly aligned**, **2 = aligned**.
+Give a short explanation with both reference and target file/symbol evidence. Add the
+five values for **template alignment out of 10**. No weights, percentages or calculator.
+Exceptions remain visible and do not automatically turn a divergent area into a 2.
 
-If evidence is missing, mark the area **unknown**. If an area truly does not apply,
-explain that. In either case omit the total and report which areas were assessed;
-never turn unknown into zero or silently award full marks. Judge simplicity against
-real requirements, not the presence of sample entities or unnecessary abstractions.
+Mark missing evidence **unknown**. Explain genuinely inapplicable areas and omit the
+total when any area is unknown/inapplicable or the reference cannot be inspected.
+Do not penalize different domain names, absent teaching features or optional Aspire.
+A target with the same patterns and its own domain can fully align. A tidy controller/
+repository implementation with different libraries still has alignment gaps to explain.
 
-State sampling limits and available test execution evidence separately. A source review
-cannot prove tests passed. Keep serious bugs/security risks visible regardless of score.
-The score is a discussion aid, not a release gate or comparable to the old weighted scores.
+Report correctness, security risks and code smells separately from the alignment score,
+with severity and evidence. Matching the template does not prove correctness or passing
+tests; state sampling limits and actual execution evidence. This is a discussion aid,
+not a release gate. Version 0.5.0 changes what the /10 score measures; earlier scores
+must be reassessed against the chosen source revision before comparison.

@@ -1,19 +1,24 @@
 # Three simple workflows
 
-This kit is **version 0.4.1, proposed**. It contains three skills, one shared principles
+This kit is **version 0.5.0, proposed**. It contains three skills, one shared baseline
 document and thin Claude/Cursor plugin manifests. Optional shell installers make those same three skills available locally.
 No Python, custom generator, scoring engine or separate verification skill is required.
 
 | Workflow | Purpose | Result |
 | --- | --- | --- |
-| REVIEW-SCORE | Understand an existing project and its gaps | Feedback in chat; five areas scored 0–2, total out of 10 when all are assessed |
-| REFACTOR | Improve an existing project in small steps | Scoped source changes preserving its behavior and contracts |
-| SCAFFOLD | Start a project suited to its own purpose | New skeleton and run instructions; Aspire optional |
+| REVIEW-SCORE | Compare with the actual skeleton | Feedback in chat; five areas scored 0–2, total out of 10 when all are assessed |
+| REFACTOR | Align an existing project in small steps | Scoped source changes preserving its behavior and contracts |
+| SCAFFOLD | Follow the skeleton for a new project | New skeleton and run instructions; Aspire optional |
 
-Read [the principles](../plugins/ceataec-dotnet/spec/standard.md). Domain entities,
-features and implementation choices in the example service illustrate the ideas;
-they are not a checklist for another project. Scaffolding starts with the requested
-purpose and leaves out teaching features unless requested.
+Read [the baseline](../plugins/ceataec-dotnet/spec/standard.md). The skeleton's code
+defines project boundaries, structure, libraries and patterns. Each workflow inspects
+a selected source revision and records its full commit. Documentation explains the
+baseline; conflicts with code and reference defects are reported explicitly.
+
+Adapt the target's own domain, business features and relationships. Omitted teaching
+features and optional Aspire are not gaps. A different architecture or library may be
+reasonable but is still a deviation to explain. Refactoring preserves existing contracts
+and records exceptions that remain; scaffolding follows the baseline from the start.
 
 ## Install locally
 
@@ -39,7 +44,11 @@ These are personal **skill installations**, available across local projects. The
 install the plugin's three skills without changing plugin settings or requiring a
 marketplace, harness CLI, symlinks or network access. Each skill gets its own bundled
 principles file with an adapted relative link, so moving the checkout does not break it.
-Scaffolding still needs a reference checkout for C# source.
+All three workflows still need access to the actual skeleton source, through a local
+reference checkout or authorized read-only repository tools. Installed guidance is not
+a substitute for inspecting code. Supply a revision/checkout or resolve main once to
+a full commit; don't change baselines during a task. Without reference evidence, review
+can describe observations but must withhold the alignment total.
 
 Use `--dry-run` (Bash) or `-DryRun` (PowerShell) to preview. `--user-home DIR` / `-UserHome DIR`
 selects another existing user directory for testing. Identical installations are a no-op;
@@ -67,8 +76,9 @@ that can read files can follow the appropriate entry point:
 For example, tell Cursor, Claude Code or Codex:
 
 > Read /path/to/ceataec-dotnet/plugins/ceataec-dotnet/skills/review-score/SKILL.md.
-> Review /path/to/my-service. Compare the design ideas, respecting our domain and
-> existing technology choices. Give feedback only.
+> Review /path/to/my-service against the actual skeleton in /path/to/ceataec-dotnet.
+> Record its commit, assess template alignment, preserve our domain, and explain
+> deliberate technology differences separately from bugs. Give feedback only.
 
 The package retains native plugin manifests. With Claude Code you can load it directly:
 
@@ -84,17 +94,24 @@ behavior should be checked in the approved client; instructions alone aren't a s
 
 ## Example requests
 
-> REFACTOR our billing service to make business rules and database access easier to
-> change independently. Keep our existing invoices, routes and authorization. Start
-> with one use case and run the relevant tests.
+> REFACTOR our billing service toward the skeleton's structure and implementation
+> patterns. Keep our invoices, routes and authorization. Start with one use case,
+> run relevant tests and identify any remaining compatibility decisions.
 
 > SCAFFOLD Acme.Booking in ../booking, an HTTP service with Postgres and no Aspire.
-> Start without business features. Use the reference for boundaries and project wiring.
+> Start without business features. Follow the reference's project wiring, libraries,
+> persistence, error handling and test approach.
 
 Build/test execution is part of refactoring or scaffolding, using normal project
 commands. Reviews inspect existing evidence and never run builds/tests or write files.
 Unknown review areas are shown without a total; there are no weighted formulas or JSON
-assessment files. Scores are discussion aids and are not comparable to versions 0.1–0.3.
+assessment files. Scores measure template alignment; correctness, security risks and
+code smells appear separately. Version 0.5.0 tightens the meaning of the /10 score:
+reassess earlier reviews against a selected skeleton commit before comparing scores.
+
+For example: a different business domain following the skeleton can fully align;
+a well-structured controller/repository alternative still has alignment gaps; omitting
+Aspire loses no points; unavailable reference source means no conformance total.
 
 ## Moving from the earlier kit
 
