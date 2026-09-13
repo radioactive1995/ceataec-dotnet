@@ -1,7 +1,7 @@
 {
   "name": "ceataec-dotnet",
-  "version": "0.4.1",
-  "description": "Review, refactor or scaffold .NET projects using shared architectural principles.",
+  "version": "0.5.0",
+  "description": "Review, refactor or scaffold .NET projects against the runnable CEATAEC skeleton.",
   "author": {
     "name": "CEATAEC"
   }

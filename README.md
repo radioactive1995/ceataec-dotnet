@@ -1,6 +1,6 @@
 # CEATAEC .NET template
 
-The **envisioned structure** of a CEATAEC .NET backend. This repo is a runnable teaching skeleton. Use its architectural ideas to guide another project; choose the structure, domain and features that fit that project.
+The **envisioned structure** of a CEATAEC .NET backend. This repo is a runnable teaching skeleton. Its code is the source of truth for project structure and implementation decisions. Follow that baseline while using the target project's own domain and features.
 
 Target: **.NET 10** (`net10.0`), multi-project solution (AppHost + ServiceDefaults + Api + Domain + Infrastructure), FastEndpoints, EF Core, Aspire for local run.
 
@@ -24,19 +24,19 @@ This is **not** modular architecture: there is no `Modules/` folder. The example
 
 ## Adoption principles
 
-[The principles](plugins/ceataec-dotnet/spec/standard.md) describe what transfers to another project. The sample's entities, features, relationships and technology choices are examples, not requirements. Another service can have its own domain and entirely different use cases.
+[The baseline](plugins/ceataec-dotnet/spec/standard.md) explains which decisions to follow and which details to adapt. All three workflows inspect the actual skeleton at a recorded commit. Its structure, libraries and patterns define alignment; another service supplies its own domain and use cases. Deliberate deviations are explicit, and code/documentation mismatches are reported.
 
 ## Three AI workflows (proposed)
 
-- **REVIEW-SCORE**: feedback only, with five areas scored 0–2 (out of 10).
-- **REFACTOR**: improve an existing project while preserving its behavior and contracts.
-- **SCAFFOLD**: create a new project for its own purpose, with optional Aspire and no teaching features unless requested.
+- **REVIEW-SCORE**: template alignment in five areas scored 0–2 (out of 10), with correctness and code smells reported separately. Feedback only.
+- **REFACTOR**: align an existing project with the skeleton while preserving its behavior and contracts.
+- **SCAFFOLD**: follow the skeleton's structure and decisions for a new project, with its own domain, optional Aspire and no teaching features unless requested.
 
-See [setup and examples](docs/ai-adoption.md). Version 0.4.0 uses plain skills and normal .NET commands. No custom Python tooling is required. Optional Bash/PowerShell installers make the three skills available locally in Cursor and Claude; see the setup guide.
+See [setup and examples](docs/ai-adoption.md). Version 0.5.0 uses plain skills and normal .NET commands. No custom Python tooling is required. Optional Bash/PowerShell installers make the three skills available locally in Cursor and Claude; see the setup guide.
 
 ## The runnable example
 
-Everything below describes this example's implementation. Names, domain boundaries, database choices, providers, middleware and sample tests illustrate patterns; do not mechanically transfer them into another project. Adapt meaningful boundaries and tests to the target's actual requirements.
+The implementation below is the adoption baseline. Transfer its technical boundaries and patterns, adapting business names, relationships, behavior and tests to the target. Sample access, credentials and logging fields are not production defaults. Aspire is optional. A reasonable alternative design can still be an explicit alignment gap.
 
 ## Composition
 
