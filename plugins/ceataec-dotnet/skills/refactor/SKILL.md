@@ -1,39 +1,29 @@
 ---
 name: refactor
-description: Refactor an existing .NET service toward the proposed CEATAEC architecture while preserving behavior, API contracts and data.
+description: Improve an existing .NET project's structure using the skeleton's architectural principles while preserving its domain, behavior and contracts.
 ---
 
 # REFACTOR
 
-Read [the standard](../../spec/standard.md), [rules](../../spec/rules.json), and
-[migration contract](../../spec/refactor-plan.md). Identify target path, baseline
-version, current branch/worktree and scope. A request to review is not refactor
-authorization. A request to refactor authorizes scoped source edits; proceed with
-reversible work without repeatedly asking for permission.
+Read [the principles](../../spec/standard.md). Identify the target, requested scope,
+existing behavior and uncommitted work. Explain a short sequence of useful changes;
+proceed with authorized scoped edits without requiring a separate review or score.
 
-Inspect architecture and record existing behavior, tests, uncommitted work, contracts
-and migration history. Reuse a recent review only if target revision and standard
-match; otherwise reassess affected areas. Explain the concrete sequence of changes.
-Create an isolated branch/worktree where possible, preserving user changes. If a
-dirty file conflicts with needed work, isolate the work or ask which version to use.
+Keep the target's own domain, features and technology choices. Improve boundaries and
+cohesion where they solve a concrete problem; don't mechanically rename folders, add
+interfaces or replace working behavior with sample entities. Use an isolated branch
+or worktree when useful to preserve user work.
 
-Use small vertical migrations that compile independently where practical: establish
-project boundaries, move one use case, preserve its HTTP adapter, extract domain
-behavior and persistence access, then repeat. Establish characterization/contract
-tests before changing behavior that lacks coverage. Keep public routes, error shapes,
-serialization, id semantics, database schema, auth and domain invariants stable.
-Do not replace working code with sample domain code. Do not remove existing FKs,
-rewrite applied migrations, downgrade packages or remove auth to satisfy a pattern.
+Work in small coherent slices. Preserve public APIs, serialization, authorization,
+data, id semantics and applied migration history. Add characterization/regression tests
+where behavior is at risk. If a breaking change is needed but not authorized, finish
+safe preparation and explain the specific compatibility decision still needed.
 
-When a breaking API/data/identity change is actually necessary, first finish the safe
-preparatory work and present its concrete compatibility/migration decision. Obtain
-the missing decision before that change; existing explicit authorization still applies.
-Honor accepted exceptions. Never weaken tests merely to improve the score.
+Use the target's ordinary restore/build/test commands for affected code. Run integration
+checks against its actual database engine when relevant; report missing prerequisites
+and pre-existing failures separately. Don't weaken tests or remove constraints to match
+the example. Correct failures introduced by the change before moving on.
 
-Run relevant build, unit, architecture and integration checks with available tools;
-use [VERIFY](../verify/SKILL.md) for execution and evidence reporting.
-integration tests require the target's real engine. Report unavailable dependencies
-and pre-existing failures separately. Stop a migration batch when it introduces a
-failure; repair or isolate that batch before proceeding. Never claim unrun checks pass.
-Report changed files, preserved contracts, validation, remaining rule gaps and rollback.
-Do not commit, push, open a PR or deploy unless the user's task also authorizes it.
+Finish with what changed, why, checks run and remaining gaps. Keep contracts and rollback
+considerations visible when relevant. Commit, push, open a PR or deploy only when the
+user's task also authorizes that action.

@@ -55,7 +55,3 @@ Thumbs.db
 appsettings.*.local.json
 *.pfx
 *.key
-
-# Python adoption tooling
-__pycache__/
-*.py[cod]

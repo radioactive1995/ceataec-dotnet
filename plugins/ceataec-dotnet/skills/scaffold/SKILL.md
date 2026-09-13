@@ -1,31 +1,40 @@
 ---
 name: scaffold
-description: Create a newly named .NET service from the CEATAEC template with optional Aspire local orchestration and adoption metadata.
+description: Create a new .NET project using the skeleton's architectural ideas, tailored to the project's own purpose and domain, with optional Aspire.
 ---
 
 # SCAFFOLD
 
-Read [the standard](../../spec/standard.md) and [scaffold choices](../../spec/scaffold-options.md).
-Reuse supplied choices. Ask briefly for missing service name/output location and whether
-local Aspire orchestration is wanted when the answer matters. State sensible defaults
-for other choices. Do not invent business requirements or company identity settings.
+Read [the principles](../../spec/standard.md). Reuse supplied choices. Ask briefly for
+missing project name/output location and purpose; establish whether Aspire is wanted.
+For an HTTP/Postgres service, the sample stack is a reasonable proposed default. For
+another project type, adapt the design instead of inventing HTTP or persistence needs.
+Don't ask for a large questionnaire or invent business requirements.
 
-This release generates a renamed **teaching starter**, retaining the sample domain
-and tests as working examples. Explain that explicitly. If asked for an empty business
-service, first generate the starter, then remove/replace sample features, entities,
-queries, migrations and their tests as a coherent additional step; adapt architecture
-anchors and add real acceptance tests. Never call an unmodified sample an empty service.
+Use an available reference checkout at a known commit; record that commit and the
+chosen options in the new project's README. If source is unavailable, acquire the
+reference through authorized repository access or ask for its location. Never claim
+to have copied or validated source you could not inspect.
 
-Locate a local Git checkout of the reference at the full commit in `spec/rules.json`.
-It is separate from the target. If unavailable, acquire the named reference through
-the user's authorized repository tools; do not substitute arbitrary files or moving main.
-Run the bundled `../../scripts/scaffold.py` with explicit `--template`, `--name`,
-`--output` and `--aspire yes|no`. Run `--dry-run` first to surface options/destination.
-The script uses committed content at the bundled reference, accepts only a new output
-directory, and never executes .NET, installs dependencies, commits or deploys.
+Create only in a new destination. Use normal .NET tooling and the reference as a guide
+for project wiring, configuration and boundaries. Generate the minimum useful skeleton
+for the stated purpose. Without supplied business behavior, leave a clean starting
+point and explain where the first use case belongs. Include teaching features only
+when explicitly requested; don't just rename the example service.
 
-Then use [VERIFY](../verify/SKILL.md) for restore/build, unit/architecture tests and
-Docker integration tests. Explain failures and missing prerequisites. For no AppHost, configure an
-external local Postgres 18 connection; telemetry/health defaults remain. Ask about
-auth/production settings only when implementing those decisions, not to generate a demo.
-Show the run command, selected choices, exact baseline and remaining production work.
+If reusing reference files, remove sample-only entities, endpoints, queries, mappings,
+providers, migrations and tests together. Keep reusable architecture checks, adapting
+their assembly anchors and domain lists. Start any new database history from the new
+model; don't ship the sample schema. This applies only to the new project, never to
+an existing service's migration history. Use fresh secret-store identities, no copied
+credentials, and an explicit access policy for any business endpoints.
+
+Aspire is optional local orchestration. If omitted, remove AppHost-specific references
+and wiring coherently; preserve applicable health/telemetry and document how dependencies
+run. Don't copy this repository's AI packaging or maintenance files into the new service.
+
+Run normal restore/build/test commands for the generated project, including real-engine
+integration tests where relevant. Check that sample-only references are absent and the
+chosen startup path works when prerequisites are available. Report failures or checks
+that couldn't run. Deliver the new files, run instructions and remaining decisions;
+no automatic commit, push or deployment.

@@ -1,31 +1,18 @@
-# CEATAEC .NET template
+# CEATAEC .NET skeleton
 
-This repository is a proposed company standard and runnable teaching sample.
-Read `README.md` for the sample and `plugins/ceataec-dotnet/spec/standard.md`
-for versioned adoption requirements. Proposed rules are not approved company policy.
+This is a runnable example and three adoption workflows. Read
+[the principles](plugins/ceataec-dotnet/spec/standard.md) for what transfers to another
+project. The sample's domain, features and technology choices are examples, not a checklist.
 
-For adoption or everyday development, choose the entry point matching the task.
-Load only the relevant skill; do not run every workflow on every change:
-
-| Intent | Skill |
+| Request | Read |
 | --- | --- |
 | REVIEW-SCORE: feedback only | `plugins/ceataec-dotnet/skills/review-score/SKILL.md` |
-| REFACTOR: align an existing service | `plugins/ceataec-dotnet/skills/refactor/SKILL.md` |
-| SCAFFOLD: create a new service | `plugins/ceataec-dotnet/skills/scaffold/SKILL.md` |
-| VERIFY: execute builds/tests | `plugins/ceataec-dotnet/skills/verify/SKILL.md` |
-| CODE-CONVENTIONS: local style guidance or fixes | `plugins/ceataec-dotnet/skills/code-conventions/SKILL.md` |
-| CHOOSE-PATTERN: design advice | `plugins/ceataec-dotnet/skills/choose-pattern/SKILL.md` |
-| IMPLEMENT-FEATURE: deliver one use case | `plugins/ceataec-dotnet/skills/implement-feature/SKILL.md` |
-| TRACE-FLOW: explain existing behavior | `plugins/ceataec-dotnet/skills/trace-flow/SKILL.md` |
-| DIAGNOSE: investigate a failure | `plugins/ceataec-dotnet/skills/diagnose/SKILL.md` |
-| REVIEW-CHANGE: feedback on a diff | `plugins/ceataec-dotnet/skills/review-change/SKILL.md` |
+| REFACTOR: improve an existing project | `plugins/ceataec-dotnet/skills/refactor/SKILL.md` |
+| SCAFFOLD: start a new project | `plugins/ceataec-dotnet/skills/scaffold/SKILL.md` |
 
-Distinguish the **reference template** from the **target service**. Do not refactor
-the template when asked to review a target. A review never authorizes writes,
-commits, PRs, builds, restores, tests, or installation in the target.
-Ordinary maintenance requests do not automatically invoke an adoption workflow.
-
-Keep architecture changes, the standard, rule catalog and tests consistent.
-Validate AI tooling with `python3 -m unittest discover -s tests/ai -v`.
-Build/test C# with the commands in README; integration tests require Docker.
-Report commands that could not run. Do not equate static inspection with passing tests.
+Use only the workflow requested. Ordinary coding needs no separate skill.
+Distinguish this reference from the target project. Preserve the target's domain,
+behavior, contracts and user changes; do not replace them with the example service.
+A review is feedback in chat: no writes, execution, commits or posted PR reviews.
+For refactoring/scaffolding, use normal project build/test commands and report what
+actually ran. Tests for this reference require .NET 10 and Docker; see README.
