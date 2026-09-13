@@ -1,4 +1,5 @@
 using Ceataec.ExampleService.Domain.Vessels;
+using Ceataec.ExampleService.Domain.Vessels.Entities;
 using Ceataec.ExampleService.Domain.Vessels.ValueObjects;
 
 namespace Ceataec.ExampleService.Domain.UnitTests.Vessels;
@@ -74,6 +75,19 @@ public sealed class VesselTests
         Assert.Same(vessel, tank.Vessel);
         Assert.Equal("Cargo 1", tank.Name);
         Assert.Equal(1250.50m, tank.CapacityCubicMeters);
+        Assert.Same(tank, added.Value);
+    }
+
+    [Fact]
+    public void AddTank_rejects_name_over_maximum_length()
+    {
+        var vessel = Vessel.Create("Aurora", ImoNumber.Create("IMO9999999").Value, "user-1").Value;
+
+        var result = vessel.AddTank(new string('a', Tank.NameMaxLength + 1), 100);
+
+        Assert.True(result.IsError);
+        Assert.Equal("tank_name_too_long", result.FirstError.Code);
+        Assert.Empty(vessel.Tanks);
     }
 
     [Theory]

@@ -58,7 +58,7 @@ public sealed class Vessel : AggregateRoot
         };
     }
 
-    public ErrorOr<Success> AddTank(string name, decimal capacityCubicMeters)
+    public ErrorOr<Tank> AddTank(string name, decimal capacityCubicMeters)
     {
         var tank = Tank.Create(this, name, capacityCubicMeters);
         if (tank.IsError)
@@ -67,6 +67,6 @@ public sealed class Vessel : AggregateRoot
         }
 
         _tanks.Add(tank.Value);
-        return Result.Success;
+        return tank.Value;
     }
 }
