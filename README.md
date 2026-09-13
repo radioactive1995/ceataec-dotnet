@@ -1,12 +1,12 @@
 # CEATAEC .NET template
 
-The **envisioned structure** of a CEATAEC .NET backend. This repo is the runnable teaching skeleton — coding agents and developers should **copy this layout**, not treat the sample as a shipping product.
+The **envisioned structure** of a CEATAEC .NET backend. This repo is a runnable teaching skeleton. Use its architectural ideas to guide another project; choose the structure, domain and features that fit that project.
 
 Target: **.NET 10** (`net10.0`), multi-project solution (AppHost + ServiceDefaults + Api + Domain + Infrastructure), FastEndpoints, EF Core, Aspire for local run.
 
 ## Purpose
 
-- Show the canonical shape: Aspire AppHost for local orchestration, ServiceDefaults, Api host (Features and Cqrs), Domain and Infrastructure class libraries.
+- Show one concrete shape: Aspire AppHost for local orchestration, ServiceDefaults, Api host (Features and Cqrs), Domain and Infrastructure class libraries.
 - Encode invariants as code (project references, architecture tests, union-type handlers, FK vs `VesselId`).
 - Give a concrete reference when creating or reviewing new .NET services.
 
@@ -22,17 +22,21 @@ Terraform and Azure DevOps pipelines are **not** here — they come from the `bu
 
 This is **not** modular architecture: there is no `Modules/` folder. Bounded contexts appear as subfolders under Domain, Features, and Infrastructure Persistence.
 
-## Canonical standard
+## Adoption principles
 
-The versioned adoption standard lives in [`plugins/ceataec-dotnet/spec/standard.md`](plugins/ceataec-dotnet/spec/standard.md). This repository owns the architecture, examples, skills and scoring rules. Review/refactor workflows use the bundled specification; scaffolding reads its pinned reference checkout.
+[The principles](plugins/ceataec-dotnet/spec/standard.md) describe what transfers to another project. The sample's entities, features, relationships and technology choices are examples, not requirements. Another service can have its own domain and entirely different use cases.
 
-## AI developer workflows (proposed)
+## Three AI workflows (proposed)
 
-Use **REVIEW-SCORE** for feedback only, **REFACTOR** for staged alignment of an existing service, or **SCAFFOLD** for a newly named starter with optional Aspire orchestration. **VERIFY** executes build/test checks separately from feedback-only review. Cursor and Claude Code share the same specifications and skills. Project skill attachment also supports Codex.
+- **REVIEW-SCORE**: feedback only, with five areas scored 0–2 (out of 10).
+- **REFACTOR**: improve an existing project while preserving its behavior and contracts.
+- **SCAFFOLD**: create a new project for its own purpose, with optional Aspire and no teaching features unless requested.
 
-For daily coding, use **CODE-CONVENTIONS**, **CHOOSE-PATTERN**, **IMPLEMENT-FEATURE**, **TRACE-FLOW**, **DIAGNOSE** or **REVIEW-CHANGE**. See [the developer guide](docs/developer-workflows.md) for focused examples.
+See [setup and examples](docs/ai-adoption.md). Version 0.4.0 uses plain skills and normal .NET commands. No custom Python tooling or managed installation is required.
 
-See [setup, examples and validation](docs/ai-adoption.md), [the standard](plugins/ceataec-dotnet/spec/standard.md), and [findings in this reference](docs/template-review.md). Version 0.3.0 adds everyday development skills; live harness acceptance remains a pilot step. Scaffolding currently retains the teaching domain and tests.
+## The runnable example
+
+Everything below describes this example's implementation. Names, domain boundaries, database choices, providers, middleware and sample tests illustrate patterns; do not mechanically transfer them into another project. Adapt meaningful boundaries and tests to the target's actual requirements.
 
 ## Composition
 
@@ -76,7 +80,7 @@ app.Run();
 
 Audit/request logging uses **GlobalPre + GlobalPost** processors — not middleware. `Middleware/SampleMiddleware` is a no-op stub showing where non-FE ASP.NET middleware would go. Audit logs a **deterministic hash** of the user id via `IHashProvider` (never the raw id). `IUserProvider.GetCurrentUserId()` reads `ClaimTypes.NameIdentifier` then `Identity.Name`, and returns `"anonymous"` when neither is present.
 
-## Layout rules
+## How the sample is organized
 
 - **No nested BCs.** Voyages is a sibling of Vessels under Domain / Features / Infrastructure Persistence, not `Vessels/Voyages/`.
 - **Tank** lives in Domain Vessels and has a **SQL FK** to Vessel (same BC).

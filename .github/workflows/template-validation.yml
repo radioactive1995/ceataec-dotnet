@@ -10,51 +10,21 @@ permissions:
   contents: read
 
 jobs:
-  tooling:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - run: python3 -m unittest discover -s tests/ai -v
-
   dotnet:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [reference, aspire, standalone]
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
       - name: Check Docker
         run: docker info
-      - name: Verify reference
-        if: matrix.variant == 'reference'
-        run: >-
-          python3 plugins/ceataec-dotnet/scripts/verify.py
-          --target . --solution Ceataec.ExampleService.sln --scope all
-      - name: Generate starter
-        if: matrix.variant != 'reference'
-        env:
-          VARIANT: ${{ matrix.variant }}
-        run: |
-          aspire=no
-          if [ "$VARIANT" = aspire ]; then aspire=yes; fi
-          python3 plugins/ceataec-dotnet/scripts/scaffold.py \
-            --template . --name Ceataec.Acceptance \
-            --output "$RUNNER_TEMP/ceataec-acceptance" --aspire "$aspire"
-      - name: Verify generated starter
-        if: matrix.variant != 'reference'
-        run: >-
-          python3 plugins/ceataec-dotnet/scripts/verify.py
-          --target "$RUNNER_TEMP/ceataec-acceptance"
-          --solution Ceataec.Acceptance.sln --scope all
+      - name: Restore
+        run: dotnet restore Ceataec.ExampleService.sln
+      - name: Build
+        run: dotnet build Ceataec.ExampleService.sln --no-restore -warnaserror:MSB3277
+      - name: Test
+        run: dotnet test Ceataec.ExampleService.sln --no-build

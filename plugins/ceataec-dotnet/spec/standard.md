@@ -1,99 +1,53 @@
-# CEATAEC .NET adoption standard
+# Adoption principles
 
-Version: **0.3.0 — proposed**. Reference: `radioactive1995/ceataec-dotnet`,
-commit `520c04af3d66868e473d39196cd058b96afa39d8`.
-Version 0.3.0 adds developer workflows; reference code, criteria and weights are unchanged
-from 0.2.0. The bundled version still identifies the complete instruction package.
-The machine-readable criteria and weights are in [rules.json](rules.json).
-Use this bundled version for a whole assessment; never silently compare against moving `main`.
+Version **0.4.0 — proposed**. Use this guidance to understand and improve a project's
+structure, not to make every repository a copy of this one.
 
-## Scope and authority
+## What carries across
 
-The initial profile is **http-api-postgres**: a .NET 10 FastEndpoints service,
-EF Core/Npgsql, vertical slices and a domain model. It supports optional Aspire
-**local orchestration**. No Azure DevOps or Terraform files are required here:
-the README assigns those to the external `build-repositories` seed.
+- Organize code around the project's own use cases. Keep related behavior easy to find.
+- Separate transport, business decisions and infrastructure responsibilities. Business
+  rules should not depend on HTTP or database implementation details.
+- Keep invariants where all relevant callers use them. A simple application can have
+  simple behavior; introduce aggregates, value objects or abstractions when they help.
+- Make reads, writes, failures and external side effects explicit. Keep persistence
+  concerns out of transport adapters and preserve API/data contracts as code evolves.
+- Test meaningful behavior and boundaries. Keep configuration, errors and local
+  verification understandable. Follow the target's formatting/analyzer conventions.
 
-The reference demonstrates conventions; it is not a production certification.
-Existing runtime behavior, API contracts, data and explicit user constraints take
-priority over cosmetic uniformity during adoption. Report conflicts rather than
-inventing company decisions. Do not retrofit this HTTP profile onto a worker,
-library, different persistence engine or modular monolith without a separate
-profile decision. General defects can still be reviewed without a conformance score.
+The sample shows one implementation: vertical slices, Api/Domain/Infrastructure projects,
+FastEndpoints, ErrorOr, EF Core/Postgres, versioned HTTP endpoints and optional Aspire.
+Equivalent implementations are valid. Project names, folder counts, libraries, database,
+identifier generation, relationships and deployment setup are not adoption requirements.
+Use the target's existing decisions unless changing them is part of the task.
 
-Rules distinguish **template** conventions from **readiness** checks. A service
-can follow the template and still have security, reliability or correctness gaps.
-The reference itself is subject to those checks. Do not propagate sample-only
-anonymous access, credentials, domain names or missing deployment decisions as policy.
+Vessels, Voyages, Certificates, Tanks and their features (including streaming) illustrate
+ideas. Never require, score, rename another domain into, or automatically scaffold them.
+The same applies to example providers, middleware, migrations and tests. Copy a pattern
+only when it serves the target's requirements. Don't copy sample access, credentials or
+logging choices as production defaults. A worker or library does not need HTTP layers.
 
-## Architecture
+## Simple review score
 
-- `src/{Name}.Api`: HTTP composition, `Features/{BC}/{UseCase}/V{n}/`, CQRS markers,
-  HTTP error mapping, processors and middleware. No Domain/Persistence/Infrastructure
-  folders inside a feature; no generic repository layer or `Modules/` conversion.
-- `src/{Name}.Domain`: aggregates, entities and value objects grouped by sibling
-  bounded contexts. No dependency on Infrastructure, Api, FastEndpoints or EF Core.
-- `src/{Name}.Infrastructure`: persistence, EF configuration/migrations, providers
-  and settings. References Domain, not Api; no Aspire dependency.
-- `src/{Name}.ServiceDefaults`: health, telemetry, HTTP resilience and discovery.
-  Keep those capabilities with or without AppHost.
-- Optional `src/{Name}.AppHost`: local orchestration, references Api. It is not
-  the production deployment target. Api references Domain, Infrastructure and ServiceDefaults.
-- Domain factories own validation/normalization and return `ErrorOr<T>`.
-  Endpoints translate HTTP; handlers orchestrate. Avoid extra abstractions without a use case.
-- Domain BCs also appear as siblings in Features and Infrastructure/Persistence.
-  Sample BC names (Vessels, Voyages, Certificates) are examples, never required names.
+Assess these five areas in the target's context, using code evidence:
 
-## Features and persistence
+| Area | Question |
+| --- | --- |
+| Responsibilities | Are transport, business behavior and infrastructure sensibly separated? |
+| Use-case organization | Is related code easy to find and change without unrelated duplication? |
+| Business behavior | Are the project's actual rules enforced in appropriate, reusable places? |
+| External boundaries | Are persistence, contracts, configuration and failure handling deliberate? |
+| Verification | Do meaningful tests cover important behavior, with clear ways to run checks? |
 
-- Write slice: Endpoint, Request, Response, Validator, Summary, Command, Handler.
-  Read slice: Endpoint, Response, Summary, Query, Handler; a request type when needed.
-  Contracts/DTOs/commands/queries are sealed records; one public type per file.
-- Endpoints dispatch the FastEndpoints command bus and return typed result unions
-  from `ExecuteAsync`; no persistence injection into endpoints.
-- Commands use `ICommandDbContext.Set<TAggregateRoot>()`, constrained to aggregate
-  roots. Query handlers use named `IDbQuery<TInput,TResult>` implementations under
-  `Infrastructure/Persistence/{BC}/Queries/`; concrete `AppDbContext` is allowed there.
-  Read queries use no-tracking access. Inspect behavior, not merely a matching string.
-- Same-BC children may use SQL FKs. Cross-BC references store ids, without SQL FKs;
-  handlers validate related ids. Existing FKs are not automatically dropped during refactoring.
-  Assess concurrency/deletion behavior where a use case requires stronger guarantees.
-- One migration history under Infrastructure/Persistence/Migrations. Integration
-  tests apply real migrations against the production database engine (Postgres here).
-  Preserve existing histories and data; never regenerate a live service's initial migration.
-- Postgres-generated `uuidv7()` ids are the reference's provider-specific convention.
-  Preserve established target id semantics during migration unless explicitly changed.
+For each: **0 = substantial gaps**, **1 = partly addressed**, **2 = well addressed**.
+Give one short explanation with a file/symbol reference. Add the five numbers for
+**a score out of 10**; no weights, percentages or automated calculator.
 
-## HTTP contracts
+If evidence is missing, mark the area **unknown**. If an area truly does not apply,
+explain that. In either case omit the total and report which areas were assessed;
+never turn unknown into zero or silently award full marks. Judge simplicity against
+real requirements, not the presence of sample entities or unnecessary abstractions.
 
-- Explicit `Version(n)`, `V{n}` folders/namespaces and `/v{n}` routes. Release-group
-  OpenAPI documents select the latest endpoint at/below their version ceiling.
-- Preserve shipped contracts. Add another version for breaking changes; do not
-  renumber or delete existing routes merely to match the sample.
-- Centralized ProblemDetails mapping for domain errors, request validation and
-  unexpected failures. Related-id misses map to 404; distinguish 400/404/409 appropriately.
-- Audit/request logging uses global FE processors. Do not log raw user ids, tokens,
-  connection strings or request bodies without an explicit data handling design.
-
-## Tests and production decisions
-
-Use Domain/Api/Infrastructure unit tests, HTTP integration tests and solution-wide
-architecture tests. Add behavior/contract coverage for each changed slice; architecture
-tests alone are not evidence that a service works. Adapt BC lists and assembly anchors
-to the real service. Keep integration tests independent of AppHost.
-
-Authentication/authorization, secrets, production readiness probes, schema deployment,
-and dependency validation need explicit service decisions. Their absence is a readiness
-finding, not a reason to invent an identity provider or deployment stack. Local example
-credentials must remain local. A deterministic hash is not proof of anonymization.
-
-## Exceptions and versioning
-
-For a justified deviation, record rule id, reason, scope, owner, decision reference
-and expiry/review date. An exception is visible alongside its finding; it does not
-turn a failed criterion into a pass. Mark a criterion N/A only when its capability
-is absent by design, with evidence; missing implementation is a failure, not N/A.
-
-Change the standard, catalog, example code and relevant tests together. Bump the
-version for scoring/behavior changes and document migration impact. Updates in a
-consumer are explicit; never auto-upgrade its pinned baseline. This repository is the only maintained source of adoption rules.
+State sampling limits and available test execution evidence separately. A source review
+cannot prove tests passed. Keep serious bugs/security risks visible regardless of score.
+The score is a discussion aid, not a release gate or comparable to the old weighted scores.
