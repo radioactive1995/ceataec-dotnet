@@ -10,6 +10,31 @@ permissions:
   contents: read
 
 jobs:
+  installers:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            installer: bash
+          - os: ubuntu-latest
+            installer: powershell
+          - os: windows-latest
+            installer: powershell
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check local installer on Linux
+        if: runner.os != 'Windows'
+        shell: pwsh
+        run: ./scripts/test-installers.ps1 -Installer ${{ matrix.installer }}
+      - name: Check local installer on Windows
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./scripts/test-installers.ps1 -Installer powershell
+
   dotnet:
     runs-on: ubuntu-latest
     timeout-minutes: 20
